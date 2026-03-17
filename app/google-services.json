@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "245663761281",
+    "project_id": "scanlearn-70c27",
+    "storage_bucket": "scanlearn-70c27.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:245663761281:android:0b61b241db490dc3375e80",
+        "android_client_info": {
+          "package_name": "com.example.scanlearn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnSivCDLeG4jS69_HNqibf8TxrknS1LHM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

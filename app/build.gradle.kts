@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -61,4 +62,8 @@ dependencies {
     implementation(libs.mlkit.image.labeling)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // Firebase BOM — manages all Firebase library versions automatically
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+
 }

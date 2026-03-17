@@ -49,6 +49,10 @@
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
+        <activity android:name=".activities.RegisterActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
         <activity android:name=".activities.MissionsActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>

@@ -10,51 +10,55 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:background="@color/primary"
-        android:padding="24dp"
-        android:gravity="center">
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Scan &amp; Learn AR"
+            android:textColor="@android:color/white"
             android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white" />
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="Interactive Object Learning"
-            android:textSize="14sp"
             android:textColor="#CCFFFFFF"
-            android:layout_marginTop="4dp" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/tvWelcome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome, Student!"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_badge_yellow"
             android:paddingHorizontal="16dp"
             android:paddingVertical="6dp"
-            android:layout_marginTop="12dp" />
+            android:text="Welcome, Student!"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- Scrollable centered content -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:gravity="center_vertical"
+            android:padding="24dp"
+            android:minHeight="400dp">
 
             <!-- Explorer Mode -->
             <com.google.android.material.button.MaterialButton

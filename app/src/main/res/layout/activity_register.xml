@@ -13,12 +13,12 @@
         android:padding="32dp"
         android:gravity="center_horizontal">
 
-        <!-- Logo / App Icon -->
+        <!-- Back / Logo -->
         <ImageView
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:layout_marginTop="48dp"
-            android:layout_marginBottom="24dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="16dp"
             android:src="@mipmap/ic_launcher"
             android:contentDescription="App Logo" />
 
@@ -26,7 +26,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome Back"
+            android:text="Create Account"
             android:textSize="26sp"
             android:textStyle="bold"
             android:textColor="#1A1A2E"
@@ -36,10 +36,45 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sign in to continue"
+            android:text="Fill in your details to get started"
             android:textSize="14sp"
             android:textColor="#888888"
-            android:layout_marginBottom="40dp" />
+            android:layout_marginBottom="32dp" />
+
+        <!-- Full Name -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilName"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Full Name"
+            android:layout_marginBottom="16dp"
+            >
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName|textCapWords"
+                android:imeOptions="actionNext" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Student Number -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilStudentNumber"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Student Number"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etStudentNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:imeOptions="actionNext" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Email -->
         <com.google.android.material.textfield.TextInputLayout
@@ -48,7 +83,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Email"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            >
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
@@ -65,11 +101,32 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Password"
-            android:layout_marginBottom="24dp"
-            app:endIconMode="password_toggle">
+            android:layout_marginBottom="16dp"
+            app:endIconMode="password_toggle"
+
+            app:helperText="Minimum 6 characters">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:imeOptions="actionNext" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Confirm Password -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilConfirmPassword"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Confirm Password"
+            android:layout_marginBottom="28dp"
+            app:endIconMode="password_toggle"
+            >
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etConfirmPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
@@ -84,25 +141,26 @@
             android:layout_marginBottom="8dp"
             android:visibility="gone" />
 
-        <!-- Sign In Button -->
+        <!-- Create Account Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSignIn"
+            android:id="@+id/btnRegister"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="Sign In"
+            android:text="Create Account"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
 
-        <!-- Go to Register -->
+        <!-- Go to Login -->
         <TextView
-            android:id="@+id/tvGoToRegister"
+            android:id="@+id/tvGoToLogin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Don't have an account? Create one"
+            android:text="Already have an account? Sign In"
             android:textSize="14sp"
             android:textColor="?attr/colorPrimary"
-            android:padding="8dp" />
+            android:padding="8dp"
+            android:layout_marginBottom="24dp" />
 
     </LinearLayout>
 </ScrollView>

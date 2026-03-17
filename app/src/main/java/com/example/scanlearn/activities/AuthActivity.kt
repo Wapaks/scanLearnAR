@@ -5,100 +5,74 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.scanlearn.databinding.ActivityAuthBinding
-import com.example.scanlearn.models.User
+import com.example.scanlearn.services.FirebaseAuthService
 import com.example.scanlearn.services.StorageService
 
 class AuthActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAuthBinding
+    private lateinit var authService: FirebaseAuthService
     private lateinit var storage: StorageService
-    private var isSignUp = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAuthBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        authService = FirebaseAuthService()
         storage = StorageService(this)
 
-        updateFormMode()
+        binding.btnSignIn.setOnClickListener { handleLogin() }
 
-        binding.btnSubmit.setOnClickListener { handleSubmit() }
-        binding.tvSwitch.setOnClickListener {
-            isSignUp = !isSignUp
-            updateFormMode()
+        binding.tvGoToRegister.setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 
-    private fun updateFormMode() {
-        if (isSignUp) {
-            binding.tilName.visibility = View.VISIBLE
-            binding.tilStudentNumber.visibility = View.VISIBLE
-            binding.tilEmail.hint = "Email"
-            binding.btnSubmit.text = "Sign Up"
-            binding.tvSwitch.text = "Already have an account? Sign In"
-            binding.tvFormTitle.text = "Create Account"
-        } else {
-            binding.tilName.visibility = View.GONE
-            binding.tilStudentNumber.visibility = View.GONE
-            binding.tilEmail.hint = "Email or Student Number"
-            binding.btnSubmit.text = "Sign In"
-            binding.tvSwitch.text = "Don't have an account? Sign Up"
-            binding.tvFormTitle.text = "Welcome Back"
-        }
-    }
-
-    private fun handleSubmit() {
+    private fun handleLogin() {
         val email = binding.etEmail.text.toString().trim()
         val password = binding.etPassword.text.toString().trim()
 
+        // Validate inputs
+        var hasError = false
+
         if (email.isEmpty()) {
-            binding.tilEmail.error = "Email or Student Number is required"
-            return
+            binding.tilEmail.error = "Email is required"
+            hasError = true
+        } else {
+            binding.tilEmail.error = null
         }
+
         if (password.isEmpty()) {
             binding.tilPassword.error = "Password is required"
-            return
-        }
-
-        binding.tilEmail.error = null
-        binding.tilPassword.error = null
-
-        if (isSignUp) {
-            val name = binding.etName.text.toString().trim()
-            val studentNumber = binding.etStudentNumber.text.toString().trim()
-
-            if (name.isEmpty()) {
-                binding.tilName.error = "Name is required"
-                return
-            }
-            if (studentNumber.isEmpty()) {
-                binding.tilStudentNumber.error = "Student Number is required"
-                return
-            }
-            binding.tilName.error = null
-            binding.tilStudentNumber.error = null
-
-            val user = User(
-                id = System.currentTimeMillis().toString(),
-                name = name,
-                email = email,
-                studentNumber = studentNumber
-            )
-            storage.saveUser(user)
-            storage.saveRegisteredUser(user, password)
+            hasError = true
         } else {
-            // Demo mode: any credentials work
-            val user = User(
-                id = System.currentTimeMillis().toString(),
-                name = if (email.contains("@")) email.substringBefore("@") else "Student",
-                email = email,
-                studentNumber = email
-            )
-            storage.saveUser(user)
+            binding.tilPassword.error = null
         }
 
-        startActivity(Intent(this, HomeActivity::class.java))
-        finish()
+        if (hasError) return
+
+        setLoading(true)
+
+        authService.login(
+            email = email,
+            password = password,
+            onSuccess = { user ->
+                storage.saveUser(user)
+                setLoading(false)
+                startActivity(Intent(this, HomeActivity::class.java))
+                finish()
+            },
+            onError = { errorMessage ->
+                setLoading(false)
+                binding.tilPassword.error = errorMessage
+            }
+        )
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        binding.btnSignIn.isEnabled = !isLoading
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.btnSignIn.text = if (isLoading) "" else "Sign In"
     }
 }
