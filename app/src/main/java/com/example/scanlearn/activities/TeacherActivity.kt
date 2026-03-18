@@ -9,6 +9,7 @@ import com.example.scanlearn.adapters.StudentProgressAdapter
 import com.example.scanlearn.databinding.ActivityTeacherBinding
 import com.example.scanlearn.models.StudentProgress
 import com.example.scanlearn.services.FirebaseAuthService
+import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
 
 class TeacherActivity : AppCompatActivity() {
@@ -16,9 +17,10 @@ class TeacherActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTeacherBinding
     private lateinit var storage: StorageService
     private lateinit var authService: FirebaseAuthService
+    private lateinit var dbService: RealtimeDbService
 
-    private val sections = listOf("Santan", "Daisy", "Orchid")
     private var allStudents: List<StudentProgress> = emptyList()
+    private var currentSection = "Santan"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,19 +29,17 @@ class TeacherActivity : AppCompatActivity() {
 
         storage = StorageService(this)
         authService = FirebaseAuthService()
+        dbService = RealtimeDbService()
 
         val teacher = storage.getUser()
         binding.tvTeacherName.text = teacher?.name ?: "Teacher"
         binding.tvTeacherEmail.text = teacher?.email ?: ""
 
-        allStudents = loadStudentProgress()
+        binding.tabSantan.setOnClickListener { showSection("Santan") }
+        binding.tabDaisy.setOnClickListener { showSection("Daisy") }
+        binding.tabOrchid.setOnClickListener { showSection("Orchid") }
 
-        setupTabs()
-
-        binding.tabSantan.performClick()
-
-        binding.btnAddObject.setOnClickListener {
-        }
+        binding.btnAddObject.setOnClickListener { }
 
         binding.btnSignOut.setOnClickListener {
             authService.signOut()
@@ -48,20 +48,36 @@ class TeacherActivity : AppCompatActivity() {
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
         }
+
+        loadDashboard()
     }
 
-    private fun setupTabs() {
-        binding.tabSantan.setOnClickListener { showSection("Santan") }
-        binding.tabDaisy.setOnClickListener { showSection("Daisy") }
-        binding.tabOrchid.setOnClickListener { showSection("Orchid") }
+    private fun loadDashboard() {
+        setLoadingState(true)
+
+        dbService.getAllStudents { students ->
+            dbService.getSubmissionsForAllStudents { submissionsMap ->
+                dbService.getScannedCountForAllStudents { scannedMap ->
+                    allStudents = dbService.buildStudentProgressList(students, submissionsMap, scannedMap)
+                    runOnUiThread {
+                        setLoadingState(false)
+                        showSection(currentSection)
+                    }
+                }
+            }
+        }
     }
 
     private fun showSection(section: String) {
+        currentSection = section
+
         binding.tabSantan.isSelected = section == "Santan"
         binding.tabDaisy.isSelected = section == "Daisy"
         binding.tabOrchid.isSelected = section == "Orchid"
 
         val filtered = allStudents.filter { it.section == section }
+
+        binding.tvSectionTitle.text = "$section Section — ${filtered.size} student(s)"
 
         if (filtered.isEmpty()) {
             binding.emptyState.visibility = View.VISIBLE
@@ -73,24 +89,10 @@ class TeacherActivity : AppCompatActivity() {
             binding.rvStudents.layoutManager = LinearLayoutManager(this)
             binding.rvStudents.adapter = StudentProgressAdapter(filtered)
         }
-
-        binding.tvSectionTitle.text = "$section Section — ${filtered.size} student(s)"
     }
 
-    private fun loadStudentProgress(): List<StudentProgress> {
-        val submissions = storage.getSubmissions()
-        val scanned = storage.getScannedObjects()
-        val currentUser = storage.getUser() ?: return emptyList()
-
-        return listOf(
-            StudentProgress(
-                userId = currentUser.id,
-                name = currentUser.name,
-                studentNumber = currentUser.studentNumber,
-                section = currentUser.section,
-                scannedCount = scanned.size,
-                submissionsCount = submissions.size
-            )
-        )
+    private fun setLoadingState(isLoading: Boolean) {
+        binding.loadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.rvStudents.visibility = if (isLoading) View.GONE else View.VISIBLE
     }
 }
