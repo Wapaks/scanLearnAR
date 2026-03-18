@@ -61,6 +61,10 @@
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
+        <activity android:name=".activities.TeacherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
     </application>
 
 </manifest>

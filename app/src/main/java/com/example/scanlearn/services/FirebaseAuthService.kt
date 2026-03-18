@@ -12,9 +12,16 @@ class FirebaseAuthService {
         email: String,
         studentNumber: String,
         password: String,
+        role: String,
+        section: String,
         onSuccess: (User) -> Unit,
         onError: (String) -> Unit
     ) {
+        if (role == "teacher" && !email.endsWith("@neu.edu.ph")) {
+            onError("Teacher accounts must use a @neu.edu.ph email address.")
+            return
+        }
+
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
                 val uid = result.user?.uid ?: run {
@@ -25,7 +32,9 @@ class FirebaseAuthService {
                     id = uid,
                     name = name,
                     email = email,
-                    studentNumber = studentNumber
+                    studentNumber = studentNumber,
+                    role = role,
+                    section = section
                 )
                 onSuccess(user)
             }
@@ -37,6 +46,7 @@ class FirebaseAuthService {
     fun login(
         email: String,
         password: String,
+        cachedUser: User?,
         onSuccess: (User) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -46,11 +56,14 @@ class FirebaseAuthService {
                     onError("Login failed. Please try again.")
                     return@addOnSuccessListener
                 }
+                val role = if (email.endsWith("@neu.edu.ph")) "teacher" else "student"
                 val user = User(
                     id = uid,
-                    name = email.substringBefore("@"),
+                    name = cachedUser?.name ?: email.substringBefore("@"),
                     email = email,
-                    studentNumber = ""
+                    studentNumber = cachedUser?.studentNumber ?: "",
+                    role = role,
+                    section = cachedUser?.section ?: ""
                 )
                 onSuccess(user)
             }
@@ -59,19 +72,10 @@ class FirebaseAuthService {
             }
     }
 
-    /**
-     * Returns the currently signed-in Firebase user UID, or null if not logged in.
-     */
     fun getCurrentUserId(): String? = auth.currentUser?.uid
 
-    /**
-     * Signs out the current user from Firebase Auth.
-     */
     fun signOut() = auth.signOut()
 
-    /**
-     * Converts Firebase error messages to user-friendly strings.
-     */
     private fun friendlyError(message: String?): String {
         return when {
             message == null -> "Something went wrong. Please try again."

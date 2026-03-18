@@ -22,21 +22,37 @@ class RegisterActivity : AppCompatActivity() {
         authService = FirebaseAuthService()
         storage = StorageService(this)
 
-        binding.btnRegister.setOnClickListener { handleRegister() }
-
-        binding.tvGoToLogin.setOnClickListener {
-            finish() // Go back to AuthActivity
+        binding.rgRole.setOnCheckedChangeListener { _, checkedId ->
+            if (checkedId == binding.rbTeacher.id) {
+                binding.sectionGroup.visibility = View.GONE
+                binding.tilStudentNumber.visibility = View.GONE
+            } else {
+                binding.sectionGroup.visibility = View.VISIBLE
+                binding.tilStudentNumber.visibility = View.VISIBLE
+            }
         }
+
+        binding.btnRegister.setOnClickListener { handleRegister() }
+        binding.tvGoToLogin.setOnClickListener { finish() }
     }
 
     private fun handleRegister() {
         val name = binding.etName.text.toString().trim()
-        val studentNumber = binding.etStudentNumber.text.toString().trim()
         val email = binding.etEmail.text.toString().trim()
         val password = binding.etPassword.text.toString().trim()
         val confirmPassword = binding.etConfirmPassword.text.toString().trim()
 
-        // Validate all fields
+        val isTeacher = binding.rbTeacher.isChecked
+        val role = if (isTeacher) "teacher" else "student"
+        val studentNumber = if (!isTeacher) binding.etStudentNumber.text.toString().trim() else ""
+
+        val section = when {
+            !isTeacher && binding.rbSantan.isChecked -> "Santan"
+            !isTeacher && binding.rbDaisy.isChecked -> "Daisy"
+            !isTeacher && binding.rbOrchid.isChecked -> "Orchid"
+            else -> ""
+        }
+
         var hasError = false
 
         if (name.isEmpty()) {
@@ -46,7 +62,7 @@ class RegisterActivity : AppCompatActivity() {
             binding.tilName.error = null
         }
 
-        if (studentNumber.isEmpty()) {
+        if (!isTeacher && studentNumber.isEmpty()) {
             binding.tilStudentNumber.error = "Student number is required"
             hasError = true
         } else {
@@ -83,6 +99,13 @@ class RegisterActivity : AppCompatActivity() {
             binding.tilConfirmPassword.error = null
         }
 
+        if (!isTeacher && section.isEmpty()) {
+            binding.tvSectionError.visibility = View.VISIBLE
+            hasError = true
+        } else {
+            binding.tvSectionError.visibility = View.GONE
+        }
+
         if (hasError) return
 
         setLoading(true)
@@ -92,13 +115,20 @@ class RegisterActivity : AppCompatActivity() {
             email = email,
             studentNumber = studentNumber,
             password = password,
+            role = role,
+            section = section,
             onSuccess = { user ->
                 storage.saveUser(user)
                 setLoading(false)
-                // Go straight to home after successful registration
-                val intent = Intent(this, HomeActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                if (user.role == "teacher") {
+                    val intent = Intent(this, TeacherActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                } else {
+                    val intent = Intent(this, HomeActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                }
             },
             onError = { errorMessage ->
                 setLoading(false)

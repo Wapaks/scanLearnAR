@@ -23,7 +23,6 @@ class AuthActivity : AppCompatActivity() {
         storage = StorageService(this)
 
         binding.btnSignIn.setOnClickListener { handleLogin() }
-
         binding.tvGoToRegister.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
@@ -33,7 +32,6 @@ class AuthActivity : AppCompatActivity() {
         val email = binding.etEmail.text.toString().trim()
         val password = binding.etPassword.text.toString().trim()
 
-        // Validate inputs
         var hasError = false
 
         if (email.isEmpty()) {
@@ -54,14 +52,24 @@ class AuthActivity : AppCompatActivity() {
 
         setLoading(true)
 
+        val cachedUser = storage.getUser()
+
         authService.login(
             email = email,
             password = password,
+            cachedUser = cachedUser,
             onSuccess = { user ->
                 storage.saveUser(user)
                 setLoading(false)
-                startActivity(Intent(this, HomeActivity::class.java))
-                finish()
+                if (user.role == "teacher") {
+                    val intent = Intent(this, TeacherActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                } else {
+                    val intent = Intent(this, HomeActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                }
             },
             onError = { errorMessage ->
                 setLoading(false)
