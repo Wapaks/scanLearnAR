@@ -7,7 +7,8 @@ import com.example.scanlearn.databinding.ItemStudentProgressBinding
 import com.example.scanlearn.models.StudentProgress
 
 class StudentProgressAdapter(
-    private val students: List<StudentProgress>
+    private val students: List<StudentProgress>,
+    private val onClick: (StudentProgress) -> Unit
 ) : RecyclerView.Adapter<StudentProgressAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemStudentProgressBinding) :
@@ -28,6 +29,10 @@ class StudentProgressAdapter(
             tvStudentSection.text = student.section
             tvScannedCount.text = student.scannedCount.toString()
             tvSubmissionsCount.text = student.submissionsCount.toString()
+            tvAverageScore.text = "${student.averageScorePercent}%"
+            tvManualCorrections.text = student.manualCorrectionsCount.toString()
+            tvLowConfidence.text = student.lowConfidenceCount.toString()
+            root.setOnClickListener { onClick(student) }
         }
     }
 

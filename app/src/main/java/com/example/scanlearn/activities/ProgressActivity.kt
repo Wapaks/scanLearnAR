@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.scanlearn.adapters.SubmissionAdapter
 import com.example.scanlearn.databinding.ActivityProgressBinding
+import com.example.scanlearn.models.QuizAttempt
 import com.example.scanlearn.services.FirebaseAuthService
 import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
@@ -47,10 +48,17 @@ class ProgressActivity : AppCompatActivity() {
         binding.tvUserEmail.text = user.email
         binding.tvScannedCount.text = "..."
         binding.tvSubmissionsCount.text = "..."
+        binding.tvAverageScore.text = "..."
 
         dbService.getScannedObjects(user.id) { scanned ->
             runOnUiThread {
                 binding.tvScannedCount.text = scanned.size.toString()
+            }
+        }
+
+        dbService.getQuizAttempts(user.id) { quizAttempts ->
+            runOnUiThread {
+                binding.tvAverageScore.text = buildAverageScoreLabel(quizAttempts)
             }
         }
 
@@ -68,5 +76,13 @@ class ProgressActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun buildAverageScoreLabel(quizAttempts: List<QuizAttempt>): String {
+        if (quizAttempts.isEmpty()) return "0%"
+        val totalPercent = quizAttempts.sumOf { attempt ->
+            if (attempt.totalQuestions == 0) 0 else (attempt.score * 100) / attempt.totalQuestions
+        }
+        return "${totalPercent / quizAttempts.size}%"
     }
 }

@@ -1,157 +1,314 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/primary"
-        android:padding="24dp"
-        android:gravity="center">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Teacher Dashboard"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:id="@+id/tvTeacherName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Teacher Name"
-            android:textSize="15sp"
-            android:textColor="#CCFFFFFF"
-            android:layout_marginTop="4dp" />
-
-        <TextView
-            android:id="@+id/tvTeacherEmail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="teacher@neu.edu.ph"
-            android:textSize="13sp"
-            android:textColor="#AAFFFFFF"
-            android:layout_marginTop="2dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@android:color/white"
-        android:elevation="4dp">
-
-        <Button
-            android:id="@+id/tabSantan"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="Santan"
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/tabDaisy"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="Daisy"
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/tabOrchid"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="Orchid"
-            android:textSize="13sp" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/tvSectionTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Section"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_secondary"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp" />
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <ProgressBar
-            android:id="@+id/loadingIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvStudents"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="12dp"
-            android:clipToPadding="false"
-            android:visibility="gone" />
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/emptyState"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
+            android:layout_height="wrap_content"
+            android:background="@color/primary"
             android:gravity="center"
-            android:visibility="gone">
+            android:orientation="vertical"
+            android:padding="24dp">
 
             <TextView
-                android:id="@+id/tvEmptySection"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="No students in this section yet."
-                android:textSize="15sp"
-                android:textColor="@color/text_secondary"
-                android:gravity="center" />
+                android:text="Teacher Hub"
+                android:textColor="@android:color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTeacherName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Teacher Name"
+                android:textColor="#CCFFFFFF"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvTeacherEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="teacher@neu.edu.ph"
+                android:textColor="#AAFFFFFF"
+                android:textSize="13sp" />
         </LinearLayout>
-    </FrameLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@android:color/white"
-        android:padding="16dp"
-        android:elevation="8dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAddObject"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="+ Add New Learning Object"
-            android:textSize="14sp"
-            android:layout_marginBottom="8dp"
-            app:cornerRadius="10dp" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSignOut"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="Sign Out"
-            android:textSize="14sp"
-            app:strokeColor="@color/primary"
-            app:cornerRadius="10dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quick Access"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Open the teacher areas you use most."
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnObjects"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="Objects"
+                    android:textSize="15sp"
+                    app:cornerRadius="16dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMissions"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_weight="1"
+                    android:text="Missions"
+                    android:textSize="15sp"
+                    app:cornerRadius="16dp"
+                    app:strokeColor="@color/primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnStudents"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="Students"
+                    android:textSize="15sp"
+                    app:cornerRadius="16dp"
+                    app:strokeColor="@color/primary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAnalytics"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_weight="1"
+                    android:text="Analytics"
+                    android:textSize="15sp"
+                    app:cornerRadius="16dp"
+                    app:strokeColor="@color/primary" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="Overview"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                android:id="@+id/loadingIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/overviewContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tvStudentsSummary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 students"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvStudentsSummaryHint"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Student activity summary"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tvObjectsSummary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 objects"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvObjectsSummaryHint"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Object library summary"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tvMissionsSummary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 missions"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvMissionsSummaryHint"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Mission summary"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSignOut"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="20dp"
+                android:text="Sign Out"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/primary" />
+
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvEmptySection"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hidden" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvSectionTitle"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone"
+                android:text="Hidden" />
+
+            <Button
+                android:id="@+id/tabSantan"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone"
+                android:text="S" />
+
+            <Button
+                android:id="@+id/tabDaisy"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone"
+                android:text="D" />
+
+            <Button
+                android:id="@+id/tabOrchid"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone"
+                android:text="O" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvStudents"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
-
-</LinearLayout>
+</ScrollView>

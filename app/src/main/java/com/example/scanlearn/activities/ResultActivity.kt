@@ -33,6 +33,11 @@ class ResultActivity : AppCompatActivity() {
         val score = intent.getIntExtra(AppConstants.EXTRA_SCORE, 0)
         val total = intent.getIntExtra(AppConstants.EXTRA_TOTAL, 0)
         val mode = intent.getStringExtra(AppConstants.EXTRA_MODE) ?: AppConstants.MODE_EXPLORER
+        val missionId = intent.getStringExtra(AppConstants.EXTRA_MISSION_ID) ?: ""
+        val scanAttemptId = intent.getStringExtra(AppConstants.EXTRA_SCAN_ATTEMPT_ID) ?: ""
+        val scanConfidence = intent.getFloatExtra(AppConstants.EXTRA_SCAN_CONFIDENCE, 0f)
+        val manualCorrection = intent.getBooleanExtra(AppConstants.EXTRA_SCAN_MANUAL_CORRECTION, false)
+        val quizAttemptId = intent.getStringExtra(AppConstants.EXTRA_QUIZ_ATTEMPT_ID) ?: ""
 
         val modeColor = AppColors.getModeColor(mode)
         binding.toolbar.setBackgroundColor(modeColor)
@@ -41,11 +46,33 @@ class ResultActivity : AppCompatActivity() {
         binding.btnSubmit.setBackgroundColor(modeColor)
 
         binding.btnSubmit.setOnClickListener {
-            handleSubmit(objectId, objectName, score, total, mode)
+            handleSubmit(
+                objectId = objectId,
+                objectName = objectName,
+                score = score,
+                total = total,
+                mode = mode,
+                quizAttemptId = quizAttemptId,
+                missionId = missionId,
+                scanAttemptId = scanAttemptId,
+                scanConfidence = scanConfidence,
+                manualCorrection = manualCorrection
+        )
         }
     }
 
-    private fun handleSubmit(objectId: String, objectName: String, score: Int, total: Int, mode: String) {
+    private fun handleSubmit(
+        objectId: String,
+        objectName: String,
+        score: Int,
+        total: Int,
+        mode: String,
+        quizAttemptId: String,
+        missionId: String,
+        scanAttemptId: String,
+        scanConfidence: Float,
+        manualCorrection: Boolean
+    ) {
         val learnings = binding.etLearnings.text.toString().trim()
         if (learnings.isEmpty()) {
             Toast.makeText(this, "Please write something about what you learned", Toast.LENGTH_SHORT).show()
@@ -65,12 +92,17 @@ class ResultActivity : AppCompatActivity() {
         val submission = Submission(
             studentId = user.id,
             studentName = user.name,
+            objectId = objectId,
             objectName = objectName,
             learnings = learnings,
             timestamp = timestamp,
             quizScore = score,
             totalQuestions = total,
-            mode = mode
+            mode = mode,
+            quizAttemptId = quizAttemptId,
+            scanAttemptId = scanAttemptId,
+            scanConfidence = scanConfidence,
+            manualCorrection = manualCorrection
         )
 
         val scanned = ScannedObject(
@@ -81,17 +113,25 @@ class ResultActivity : AppCompatActivity() {
 
         dbService.saveSubmission(user.id, submission) { subOk ->
             dbService.saveScannedObject(user.id, scanned) { scanOk ->
-                runOnUiThread {
-                    binding.btnSubmit.isEnabled = true
-                    if (subOk && scanOk) {
-                        Toast.makeText(this, "Submitted! Your teacher will review your reflection.", Toast.LENGTH_LONG).show()
-                        val intent = Intent(this, HomeActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                        startActivity(intent)
-                        finish()
-                    } else {
-                        Toast.makeText(this, "Submit failed. Check your connection and try again.", Toast.LENGTH_SHORT).show()
+                val finalizeSubmission: (Boolean) -> Unit = { missionOk ->
+                    runOnUiThread {
+                        binding.btnSubmit.isEnabled = true
+                        if (subOk && scanOk && missionOk) {
+                            Toast.makeText(this, "Submitted! Your teacher will review your reflection.", Toast.LENGTH_LONG).show()
+                            val intent = Intent(this, HomeActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                            startActivity(intent)
+                            finish()
+                        } else {
+                            Toast.makeText(this, "Submit failed. Check your connection and try again.", Toast.LENGTH_SHORT).show()
+                        }
                     }
+                }
+
+                if (mode == AppConstants.MODE_MISSION && missionId.isNotEmpty()) {
+                    dbService.updateStudentMissionProgress(user.id, missionId, objectId, finalizeSubmission)
+                } else {
+                    finalizeSubmission(true)
                 }
             }
         }

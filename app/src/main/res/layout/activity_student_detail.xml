@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:background="@color/primary">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="@android:color/white" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Student Insight"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:gravity="center" />
+
+        <View
+            android:layout_width="44dp"
+            android:layout_height="44dp" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/loadingIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="24dp"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/contentGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvStudentName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Student Name"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvStudentMeta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Section | Student Number"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="4dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:id="@+id/tvAverageScore"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0%"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/success" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Avg Score"
+                                android:textSize="11sp"
+                                android:textColor="@color/text_secondary" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:id="@+id/tvManualCorrections"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/warning" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Manual Fixes"
+                                android:textSize="11sp"
+                                android:textColor="@color/text_secondary" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:id="@+id/tvLowConfidence"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/challenge" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Low Conf"
+                                android:textSize="11sp"
+                                android:textColor="@color/text_secondary" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Scan Insight"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvScanSummary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="No confirmed scan attempts yet."
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="14dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAssignFollowUpMission"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Assign Follow-up Mission"
+                            android:textAllCaps="false"
+                            app:cornerRadius="12dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnReviewLowConfidence"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:text="Review Low-Confidence"
+                            android:textAllCaps="false"
+                            app:cornerRadius="12dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardFollowUpMission"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Follow-up Mission Draft"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvFollowUpTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Mission title"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvFollowUpReason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Reason"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/tvFollowUpObjects"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Objects"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Weak Objects"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:id="@+id/tvWeakTopicsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No quiz data yet."
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="10dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvWeakTopics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Weak Categories"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:id="@+id/tvWeakCategoriesEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No category trend yet."
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="10dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvWeakCategories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quiz History"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:id="@+id/tvQuizEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No quiz attempts yet."
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="10dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvQuizHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recent Objects Learned"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:id="@+id/tvRecentEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No submissions yet."
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="10dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRecentLearned"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/lowConfidenceSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="18dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Low-Confidence Scan Review"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="10dp" />
+
+                <TextView
+                    android:id="@+id/tvLowConfidenceEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="No low-confidence scans to review."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="10dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvLowConfidenceScans"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

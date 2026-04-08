@@ -37,6 +37,10 @@
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
+        <activity android:name=".activities.RecognitionResultActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
         <activity android:name=".activities.ObjectDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
@@ -62,6 +66,34 @@
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
         <activity android:name=".activities.TeacherActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.StudentDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.TeacherObjectsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.TeacherObjectDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.TeacherAnalyticsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.TeacherStudentsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.TeacherMissionsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.AddObjectActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 

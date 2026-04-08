@@ -11,6 +11,7 @@ import com.example.scanlearn.models.StudentProgress
 import com.example.scanlearn.services.FirebaseAuthService
 import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
+import com.example.scanlearn.utils.AppConstants
 
 class TeacherActivity : AppCompatActivity() {
 
@@ -18,7 +19,6 @@ class TeacherActivity : AppCompatActivity() {
     private lateinit var storage: StorageService
     private lateinit var authService: FirebaseAuthService
     private lateinit var dbService: RealtimeDbService
-
     private var allStudents: List<StudentProgress> = emptyList()
     private var currentSection = "Santan"
 
@@ -35,11 +35,21 @@ class TeacherActivity : AppCompatActivity() {
         binding.tvTeacherName.text = teacher?.name ?: "Teacher"
         binding.tvTeacherEmail.text = teacher?.email ?: ""
 
-        binding.tabSantan.setOnClickListener { showSection("Santan") }
-        binding.tabDaisy.setOnClickListener { showSection("Daisy") }
-        binding.tabOrchid.setOnClickListener { showSection("Orchid") }
+        binding.btnObjects.setOnClickListener {
+            startActivity(Intent(this, TeacherObjectsActivity::class.java))
+        }
 
-        binding.btnAddObject.setOnClickListener { }
+        binding.btnMissions.setOnClickListener {
+            startActivity(Intent(this, TeacherMissionsActivity::class.java))
+        }
+
+        binding.btnStudents.setOnClickListener {
+            startActivity(Intent(this, TeacherStudentsActivity::class.java))
+        }
+
+        binding.btnAnalytics.setOnClickListener {
+            startActivity(Intent(this, TeacherAnalyticsActivity::class.java))
+        }
 
         binding.btnSignOut.setOnClickListener {
             authService.signOut()
@@ -49,19 +59,44 @@ class TeacherActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        loadDashboard()
+        loadOverview()
     }
 
-    private fun loadDashboard() {
+    override fun onResume() {
+        super.onResume()
+        loadOverview()
+    }
+
+    private fun loadOverview() {
         setLoadingState(true)
 
         dbService.getAllStudents { students ->
-            dbService.getSubmissionsForAllStudents { submissionsMap ->
-                dbService.getScannedCountForAllStudents { scannedMap ->
-                    allStudents = dbService.buildStudentProgressList(students, submissionsMap, scannedMap)
-                    runOnUiThread {
-                        setLoadingState(false)
-                        showSection(currentSection)
+            dbService.getLearningObjects { objects ->
+                dbService.getAllMissions { missions ->
+                    dbService.getQuizAttemptsForAllStudents { quizAttemptsMap ->
+                        val quizAttempts = quizAttemptsMap.values.flatten()
+                        val averageQuizPercent = if (quizAttempts.isEmpty()) 0 else {
+                            quizAttempts.sumOf { attempt ->
+                                if (attempt.totalQuestions == 0) 0 else (attempt.score * 100) / attempt.totalQuestions
+                            } / quizAttempts.size
+                        }
+                        val publishedObjects = objects.count {
+                            it.status.isBlank() || it.status.equals("published", ignoreCase = true)
+                        }
+                        val activeMissions = missions.count { it.active }
+
+                        runOnUiThread {
+                            setLoadingState(false)
+                            binding.tvStudentsSummary.text = "${students.size} students"
+                            binding.tvStudentsSummaryHint.text =
+                                "$averageQuizPercent% average quiz performance across all recorded attempts."
+                            binding.tvObjectsSummary.text = "${objects.size} objects"
+                            binding.tvObjectsSummaryHint.text =
+                                "$publishedObjects published and ${objects.size - publishedObjects} archived."
+                            binding.tvMissionsSummary.text = "${missions.size} missions"
+                            binding.tvMissionsSummaryHint.text =
+                                "$activeMissions active mission(s) ready for students."
+                        }
                     }
                 }
             }
@@ -76,7 +111,6 @@ class TeacherActivity : AppCompatActivity() {
         binding.tabOrchid.isSelected = section == "Orchid"
 
         val filtered = allStudents.filter { it.section == section }
-
         binding.tvSectionTitle.text = "$section Section — ${filtered.size} student(s)"
 
         if (filtered.isEmpty()) {
@@ -87,12 +121,20 @@ class TeacherActivity : AppCompatActivity() {
             binding.emptyState.visibility = View.GONE
             binding.rvStudents.visibility = View.VISIBLE
             binding.rvStudents.layoutManager = LinearLayoutManager(this)
-            binding.rvStudents.adapter = StudentProgressAdapter(filtered)
+            binding.rvStudents.adapter = StudentProgressAdapter(filtered) { student ->
+                openStudentDetail(student)
+            }
         }
     }
 
     private fun setLoadingState(isLoading: Boolean) {
         binding.loadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
-        binding.rvStudents.visibility = if (isLoading) View.GONE else View.VISIBLE
+        binding.overviewContent.visibility = if (isLoading) View.GONE else View.VISIBLE
+    }
+
+    private fun openStudentDetail(student: StudentProgress) {
+        val intent = Intent(this, StudentDetailActivity::class.java)
+        intent.putExtra(AppConstants.EXTRA_STUDENT_PROGRESS, student)
+        startActivity(intent)
     }
 }

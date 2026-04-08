@@ -26,6 +26,13 @@ class SubmissionAdapter(private val submissions: List<Submission>) :
         holder.binding.tvObjectName.text = sub.objectName
         holder.binding.tvScore.text = "${sub.quizScore}/${sub.totalQuestions}"
         holder.binding.tvLearnings.text = sub.learnings
+        val confidence = (sub.scanConfidence * 100).toInt()
+        val correctionLabel = if (sub.manualCorrection) {
+            "Manual correction"
+        } else {
+            "Confirmed from suggestions"
+        }
+        holder.binding.tvScanMeta.text = "Scan confidence: $confidence% | $correctionLabel"
 
         try {
             val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())

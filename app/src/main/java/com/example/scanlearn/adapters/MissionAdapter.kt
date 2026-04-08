@@ -24,6 +24,7 @@ class MissionAdapter(
         holder.binding.tvTitle.text = mission.title
         holder.binding.tvDescription.text = mission.description
         holder.binding.tvObjects.text = "Objects to find: ${mission.objectsToFind.joinToString(", ")}"
+        holder.binding.tvProgress.text = "Progress: ${mission.completedObjectIds.size}/${mission.objectsToFind.distinct().size} (${mission.progressPercent}%)"
 
         if (mission.completed) {
             holder.binding.tvCompleted.visibility = View.VISIBLE
