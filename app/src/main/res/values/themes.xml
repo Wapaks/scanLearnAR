@@ -4,10 +4,19 @@
         <item name="colorPrimaryVariant">@color/primary_dark</item>
         <item name="colorOnPrimary">@android:color/white</item>
         <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">never</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
-    <style name="Theme.ScanLearnAR.NoActionBar">
+    <style name="Theme.ScanLearnAR.NoActionBar" parent="Theme.ScanLearnAR">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">never</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

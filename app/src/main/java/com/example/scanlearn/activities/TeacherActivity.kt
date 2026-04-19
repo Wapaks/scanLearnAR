@@ -8,10 +8,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.scanlearn.adapters.StudentProgressAdapter
 import com.example.scanlearn.databinding.ActivityTeacherBinding
 import com.example.scanlearn.models.StudentProgress
+import com.example.scanlearn.models.User
 import com.example.scanlearn.services.FirebaseAuthService
 import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
 import com.example.scanlearn.utils.AppConstants
+import com.google.firebase.database.ValueEventListener
 
 class TeacherActivity : AppCompatActivity() {
 
@@ -21,6 +23,8 @@ class TeacherActivity : AppCompatActivity() {
     private lateinit var dbService: RealtimeDbService
     private var allStudents: List<StudentProgress> = emptyList()
     private var currentSection = "Santan"
+    private var currentUser: User? = null
+    private var conversationsListener: ValueEventListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,9 +36,14 @@ class TeacherActivity : AppCompatActivity() {
         dbService = RealtimeDbService()
 
         val teacher = storage.getUser()
+        currentUser = teacher
         binding.tvTeacherName.text = teacher?.name ?: "Teacher"
         binding.tvTeacherEmail.text = teacher?.email ?: ""
+        binding.fabChat.text = "Chat"
 
+        binding.btnCurriculum.setOnClickListener {
+            startActivity(Intent(this, TeacherCurriculumActivity::class.java))
+        }
         binding.btnObjects.setOnClickListener {
             startActivity(Intent(this, TeacherObjectsActivity::class.java))
         }
@@ -51,6 +60,10 @@ class TeacherActivity : AppCompatActivity() {
             startActivity(Intent(this, TeacherAnalyticsActivity::class.java))
         }
 
+        binding.fabChat.setOnClickListener {
+            startActivity(Intent(this, ChatInboxActivity::class.java))
+        }
+
         binding.btnSignOut.setOnClickListener {
             authService.signOut()
             storage.clearUser()
@@ -65,6 +78,17 @@ class TeacherActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadOverview()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        observeUnreadChats()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        dbService.removeConversationsListener(conversationsListener)
+        conversationsListener = null
     }
 
     private fun loadOverview() {
@@ -136,5 +160,20 @@ class TeacherActivity : AppCompatActivity() {
         val intent = Intent(this, StudentDetailActivity::class.java)
         intent.putExtra(AppConstants.EXTRA_STUDENT_PROGRESS, student)
         startActivity(intent)
+    }
+
+    private fun observeUnreadChats() {
+        val user = currentUser ?: return
+        dbService.removeConversationsListener(conversationsListener)
+        conversationsListener = dbService.observeConversationsForUser(user.id) { conversations ->
+            runOnUiThread {
+                val unreadCount = dbService.getTotalUnreadMessages(conversations, user.id)
+                binding.fabChat.text = if (unreadCount > 0) {
+                    "Chat $unreadCount"
+                } else {
+                    "Chat"
+                }
+            }
+        }
     }
 }

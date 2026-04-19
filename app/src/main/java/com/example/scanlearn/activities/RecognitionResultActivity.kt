@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.scanlearn.adapters.LearningObjectAdapter
 import com.example.scanlearn.databinding.ActivityRecognitionResultBinding
 import com.example.scanlearn.models.LearningObject
+import com.example.scanlearn.models.ObjectSelectionBox
 import com.example.scanlearn.models.ScanAttempt
 import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
@@ -31,6 +32,8 @@ class RecognitionResultActivity : AppCompatActivity() {
     private var suggestedIds: List<String> = emptyList()
     private var detectedCategory: String = "animals"
     private var scanConfidence: Float = 0f
+    private var selectionApplied = false
+    private var selectedBox = ObjectSelectionBox()
     private var allObjects: List<LearningObject> = emptyList()
     private var currentManualCategory: String = "all"
 
@@ -47,6 +50,10 @@ class RecognitionResultActivity : AppCompatActivity() {
         detectedCategory = intent.getStringExtra(AppConstants.EXTRA_SCAN_CATEGORY) ?: "animals"
         suggestedIds = intent.getStringArrayListExtra(AppConstants.EXTRA_SCAN_SUGGESTIONS) ?: emptyList()
         scanConfidence = intent.getFloatExtra(AppConstants.EXTRA_SCAN_CONFIDENCE, 0f)
+        selectionApplied = intent.getBooleanExtra(AppConstants.EXTRA_SCAN_SELECTION_APPLIED, false)
+        selectedBox =
+            intent.getSerializableExtra(AppConstants.EXTRA_SCAN_SELECTION_BOX) as? ObjectSelectionBox
+                ?: ObjectSelectionBox()
         currentManualCategory = detectedCategory
 
         val modeColor = AppColors.getModeColor(mode)
@@ -85,9 +92,17 @@ class RecognitionResultActivity : AppCompatActivity() {
         }
         binding.tvConfidence.text = "$confidenceLabel • $confidencePercent%"
         binding.tvRecognitionMessage.text = if (suggestedIds.isNotEmpty()) {
-            "Choose the correct object before we open the lesson."
+            if (selectionApplied) {
+                "Choose the correct object from the selected area before we open the lesson."
+            } else {
+                "Choose the correct object before we open the lesson."
+            }
         } else {
-            "We are not sure yet. Please choose the correct object manually."
+            if (selectionApplied) {
+                "We checked the selected area but still are not sure. Please choose the correct object manually."
+            } else {
+                "We are not sure yet. Please choose the correct object manually."
+            }
         }
     }
 
@@ -169,6 +184,8 @@ class RecognitionResultActivity : AppCompatActivity() {
             selectedObjectId = obj.id,
             confidence = scanConfidence,
             manualCorrection = manualCorrection,
+            selectedBox = selectedBox,
+            selectionApplied = selectionApplied,
             createdAt = timestamp
         )
 

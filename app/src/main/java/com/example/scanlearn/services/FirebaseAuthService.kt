@@ -14,6 +14,7 @@ class FirebaseAuthService {
         password: String,
         role: String,
         section: String,
+        gradeLevel: String,
         onSuccess: (User) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -34,7 +35,8 @@ class FirebaseAuthService {
                     email = email,
                     studentNumber = studentNumber,
                     role = role,
-                    section = section
+                    section = section,
+                    gradeLevel = gradeLevel
                 )
                 onSuccess(user)
             }
@@ -63,7 +65,8 @@ class FirebaseAuthService {
                     email = email,
                     studentNumber = cachedUser?.studentNumber ?: "",
                     role = role,
-                    section = cachedUser?.section ?: ""
+                    section = cachedUser?.section ?: "",
+                    gradeLevel = cachedUser?.gradeLevel ?: if (role == "student") "Grade 3" else ""
                 )
                 onSuccess(user)
             }

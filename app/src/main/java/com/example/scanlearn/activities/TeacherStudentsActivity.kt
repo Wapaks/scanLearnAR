@@ -73,7 +73,9 @@ class TeacherStudentsActivity : AppCompatActivity() {
         binding.tabDaisy.isSelected = section == "Daisy"
         binding.tabOrchid.isSelected = section == "Orchid"
 
-        val filtered = allStudents.filter { it.section == section }
+        val filtered = allStudents.filter {
+            it.section.trim().equals(section.trim(), ignoreCase = true)
+        }
         binding.tvSectionTitle.text = "$section Section - ${filtered.size} student(s)"
 
         if (filtered.isEmpty()) {

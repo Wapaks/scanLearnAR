@@ -6,6 +6,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.scanlearn.databinding.ActivityAuthBinding
 import com.example.scanlearn.services.FirebaseAuthService
+import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
 
 class AuthActivity : AppCompatActivity() {
@@ -13,6 +14,7 @@ class AuthActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAuthBinding
     private lateinit var authService: FirebaseAuthService
     private lateinit var storage: StorageService
+    private lateinit var dbService: RealtimeDbService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,6 +23,7 @@ class AuthActivity : AppCompatActivity() {
 
         authService = FirebaseAuthService()
         storage = StorageService(this)
+        dbService = RealtimeDbService()
 
         binding.btnSignIn.setOnClickListener { handleLogin() }
         binding.tvGoToRegister.setOnClickListener {
@@ -59,16 +62,36 @@ class AuthActivity : AppCompatActivity() {
             password = password,
             cachedUser = cachedUser,
             onSuccess = { user ->
-                storage.saveUser(user)
-                setLoading(false)
-                if (user.role == "teacher") {
-                    val intent = Intent(this, TeacherActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                } else {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
+                dbService.getUser(user.id) { existingUser ->
+                    val resolvedUser = existingUser ?: user
+                    val persistAndRoute = {
+                        storage.saveUser(resolvedUser)
+                        setLoading(false)
+                        if (resolvedUser.role == "teacher") {
+                            val intent = Intent(this, TeacherActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                        } else {
+                            val intent = Intent(this, HomeActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                        }
+                    }
+
+                    if (existingUser != null) {
+                        runOnUiThread { persistAndRoute() }
+                    } else {
+                        dbService.saveUser(resolvedUser) { saved ->
+                            runOnUiThread {
+                                if (!saved) {
+                                    setLoading(false)
+                                    binding.tilPassword.error = "Could not load your profile. Please try again."
+                                    return@runOnUiThread
+                                }
+                                persistAndRoute()
+                            }
+                        }
+                    }
                 }
             },
             onError = { errorMessage ->

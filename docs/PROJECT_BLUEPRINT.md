@@ -21,9 +21,35 @@
 - [x] Add object detail screen with edit, publish or archive, and object-level analytics
 - [x] Add teacher analytics screens for scan quality and object confusion
 - [x] Expand teacher dashboard into objects, missions, students, analytics
+- [x] Add teacher-side mission create, edit, archive, and section-assignment workflow
 - [ ] Add mission assignment and tracking by section
 - [ ] Add category-aware scanning rules before model execution
 - [ ] Evaluate Pl@ntNet, Google Vision, and custom-model integration
+
+## Recommendation To Proceed
+
+Based on the current progress, these are the best next actions to keep the project aligned and moving forward.
+
+### Things To Do Next
+
+- Build `Test Knowledge` mode so the student side fully matches the intended three-mode structure
+- Add a teacher review queue for low-confidence scans, manual corrections, and hard-to-match objects
+- Improve mission tracking so teachers can see assignment progress by section and by mission
+- Add mission editing details like required score, clearer completion rules, and optional difficulty
+- Strengthen teacher object management with richer object metadata such as aliases, keywords, and multiple images
+- Add section-aware or category-aware scanner restrictions before recognition runs
+- Add better student progress summaries such as mastered objects, weak categories, and recent mission completions
+
+### Things To Improve
+
+- Improve recognition reliability by reducing dependence on raw ML Kit guesses
+- Replace simple object matching with stronger matching based on aliases, keywords, and category context
+- Improve content quality for elementary students by keeping lessons shorter, simpler, and more visual
+- Improve mission design so missions feel like guided learning tasks instead of only checklists
+- Improve analytics readability so teachers can act faster without interpreting too much raw data
+- Improve teacher workflows with fewer clicks between insight, content editing, and mission assignment
+- Improve consistency of text and UI polish by cleaning up remaining odd characters and older placeholder strings
+- Improve technical structure over time by moving more logic from activities into repositories or use-case helpers
 
 ## 1. Product Direction
 

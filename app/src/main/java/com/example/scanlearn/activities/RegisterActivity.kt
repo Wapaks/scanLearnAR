@@ -6,6 +6,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.scanlearn.databinding.ActivityRegisterBinding
 import com.example.scanlearn.services.FirebaseAuthService
+import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
 
 class RegisterActivity : AppCompatActivity() {
@@ -13,6 +14,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var binding: ActivityRegisterBinding
     private lateinit var authService: FirebaseAuthService
     private lateinit var storage: StorageService
+    private lateinit var dbService: RealtimeDbService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,6 +23,7 @@ class RegisterActivity : AppCompatActivity() {
 
         authService = FirebaseAuthService()
         storage = StorageService(this)
+        dbService = RealtimeDbService()
 
         binding.rgRole.setOnCheckedChangeListener { _, checkedId ->
             if (checkedId == binding.rbTeacher.id) {
@@ -45,6 +48,7 @@ class RegisterActivity : AppCompatActivity() {
         val isTeacher = binding.rbTeacher.isChecked
         val role = if (isTeacher) "teacher" else "student"
         val studentNumber = if (!isTeacher) binding.etStudentNumber.text.toString().trim() else ""
+        val gradeLevel = if (isTeacher) "" else "Grade 3"
 
         val section = when {
             !isTeacher && binding.rbSantan.isChecked -> "Santan"
@@ -117,17 +121,27 @@ class RegisterActivity : AppCompatActivity() {
             password = password,
             role = role,
             section = section,
+            gradeLevel = gradeLevel,
             onSuccess = { user ->
-                storage.saveUser(user)
-                setLoading(false)
-                if (user.role == "teacher") {
-                    val intent = Intent(this, TeacherActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                } else {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
+                dbService.saveUser(user) { saved ->
+                    runOnUiThread {
+                        setLoading(false)
+                        if (!saved) {
+                            binding.tilEmail.error = "Could not save your profile. Please try again."
+                            return@runOnUiThread
+                        }
+
+                        storage.saveUser(user)
+                        if (user.role == "teacher") {
+                            val intent = Intent(this, TeacherActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                        } else {
+                            val intent = Intent(this, HomeActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                        }
+                    }
                 }
             },
             onError = { errorMessage ->

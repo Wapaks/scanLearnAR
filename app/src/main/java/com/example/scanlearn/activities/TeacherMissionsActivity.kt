@@ -1,13 +1,20 @@
 package com.example.scanlearn.activities
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.scanlearn.adapters.MissionAdapter
+import com.example.scanlearn.adapters.TeacherMissionAdapter
 import com.example.scanlearn.databinding.ActivityTeacherMissionsBinding
 import com.example.scanlearn.models.Mission
 import com.example.scanlearn.services.RealtimeDbService
+import com.example.scanlearn.utils.AppConstants
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TeacherMissionsActivity : AppCompatActivity() {
 
@@ -20,10 +27,14 @@ class TeacherMissionsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTeacherMissionsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        WindowCompat.setDecorFitsSystemWindows(window, true)
 
         dbService = RealtimeDbService()
 
         binding.btnBack.setOnClickListener { finish() }
+        binding.btnAddMission.setOnClickListener {
+            startActivity(Intent(this, AddEditMissionActivity::class.java))
+        }
         binding.tabActive.setOnClickListener { showFilter(FILTER_ACTIVE) }
         binding.tabArchived.setOnClickListener { showFilter(FILTER_ARCHIVED) }
         binding.rvMissions.layoutManager = LinearLayoutManager(this)
@@ -65,13 +76,43 @@ class TeacherMissionsActivity : AppCompatActivity() {
         binding.emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         binding.rvMissions.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
 
-        binding.rvMissions.adapter = MissionAdapter(filtered) { }
+        binding.rvMissions.adapter = TeacherMissionAdapter(
+            missions = filtered,
+            onEdit = { mission ->
+                val intent = Intent(this, AddEditMissionActivity::class.java)
+                intent.putExtra(AppConstants.EXTRA_MISSION_ID, mission.id)
+                startActivity(intent)
+            },
+            onToggleStatus = { mission ->
+                toggleMissionStatus(mission)
+            }
+        )
     }
 
     private fun setLoading(isLoading: Boolean) {
         binding.loadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
         binding.rvMissions.visibility = if (isLoading) View.GONE else binding.rvMissions.visibility
         binding.emptyState.visibility = if (isLoading) View.GONE else binding.emptyState.visibility
+    }
+
+    private fun toggleMissionStatus(mission: Mission) {
+        val updatedMission = mission.copy(active = !mission.active)
+        setLoading(true)
+        dbService.saveMission(updatedMission) { success ->
+            runOnUiThread {
+                setLoading(false)
+                if (success) {
+                    Toast.makeText(
+                        this,
+                        if (updatedMission.active) "Mission reactivated." else "Mission archived.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    loadMissions()
+                } else {
+                    Toast.makeText(this, "Could not update mission status.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     companion object {

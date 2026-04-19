@@ -1,141 +1,212 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fitsSystemWindows="true"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/primary"
-        android:padding="24dp"
-        android:gravity="center">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Scan &amp; Learn AR"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Interactive Object Learning"
-            android:textSize="14sp"
-            android:textColor="#CCFFFFFF"
-            android:layout_marginTop="4dp" />
-
-        <TextView
-            android:id="@+id/tvWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Welcome, Student!"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:background="@drawable/bg_badge_yellow"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="6dp"
-            android:layout_marginTop="12dp" />
-    </LinearLayout>
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/primary"
+            android:gravity="center"
             android:orientation="vertical"
-            android:gravity="center_vertical"
-            android:padding="24dp"
-            android:minHeight="400dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnExplorer"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="🔍  Explorer Mode"
-                android:textSize="16sp"
-                android:backgroundTint="@color/explorer"
-                app:cornerRadius="12dp" />
+            android:padding="24dp">
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Scan any object and learn at your own pace"
-                android:textSize="13sp"
-                android:textColor="@color/text_secondary"
-                android:gravity="center"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="20dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnMission"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="🎯  Mission Mode"
-                android:textSize="16sp"
-                android:backgroundTint="@color/mission"
-                app:cornerRadius="12dp" />
+                android:text="Scan &amp; Learn AR"
+                android:textColor="@android:color/white"
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Complete specific learning objectives"
-                android:textSize="13sp"
-                android:textColor="@color/text_secondary"
-                android:gravity="center"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="20dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnChallenge"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="⚡  Challenge Mode"
-                android:textSize="16sp"
-                android:backgroundTint="@color/challenge"
-                app:cornerRadius="12dp" />
+                android:layout_marginTop="4dp"
+                android:text="Interactive Object Learning"
+                android:textColor="#CCFFFFFF"
+                android:textSize="14sp" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/tvWelcome"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Timed quizzes and competitions"
-                android:textSize="13sp"
-                android:textColor="@color/text_secondary"
-                android:gravity="center"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="32dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnProgress"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="View My Progress"
-                android:textSize="15sp"
-                app:strokeColor="@color/primary"
-                app:cornerRadius="12dp"
-                android:layout_marginBottom="12dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogout"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Sign Out"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_badge_yellow"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="6dp"
+                android:text="Welcome, Student!"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                app:cornerRadius="12dp" />
-
+                android:textStyle="bold" />
         </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="400dp"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Grade 3 Pilot"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvLearningPlanTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="My Learning Plan"
+                            android:textColor="@color/text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvLearningPlanSubtitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Follow your quarter lessons, track your next topic, and keep your progress in one place."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnLearningPlan"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:layout_marginTop="16dp"
+                            android:text="Open My Learning Plan"
+                            android:textAllCaps="false"
+                            app:cornerRadius="14dp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnExplorer"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:backgroundTint="@color/explorer"
+                    android:text="Explorer Mode"
+                    android:textSize="16sp"
+                    app:cornerRadius="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="20dp"
+                    android:gravity="center"
+                    android:text="Scan any object and learn at your own pace"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMission"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:backgroundTint="@color/mission"
+                    android:text="Mission Mode"
+                    android:textSize="16sp"
+                    app:cornerRadius="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="20dp"
+                    android:gravity="center"
+                    android:text="Complete specific learning objectives"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChallenge"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:backgroundTint="@color/challenge"
+                    android:text="Test Knowledge"
+                    android:textSize="16sp"
+                    app:cornerRadius="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="32dp"
+                    android:gravity="center"
+                    android:text="Review lesson quizzes without using the scanner"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnProgress"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="View My Progress"
+                    android:textSize="15sp"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/primary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLogout"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Sign Out"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    app:cornerRadius="12dp" />
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabChat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:text="Chat"
+        android:textAllCaps="false"
+        app:backgroundTint="@color/primary"
+        app:icon="@drawable/outline_alternate_email_24"
+        app:iconTint="@android:color/white" />
+
+</FrameLayout>
+
+

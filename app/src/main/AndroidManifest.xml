@@ -8,6 +8,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
+        android:name=".ScanLearnApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -33,7 +34,31 @@
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
+        <activity android:name=".activities.MyLearningPlanActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.QuarterHubActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.UnitDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.LessonPlayerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.TestKnowledgeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
         <activity android:name=".activities.ScannerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.ObjectSelectionActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
@@ -69,6 +94,14 @@
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
+        <activity android:name=".activities.TeacherCurriculumActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.LessonStudioActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
         <activity android:name=".activities.StudentDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
@@ -93,7 +126,19 @@
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
+        <activity android:name=".activities.AddEditMissionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
         <activity android:name=".activities.AddObjectActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.ChatInboxActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.ChatConversationActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 

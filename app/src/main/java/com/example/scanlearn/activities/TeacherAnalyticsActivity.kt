@@ -4,19 +4,29 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.scanlearn.adapters.CategoryInsightAdapter
 import com.example.scanlearn.adapters.ObjectInsightAdapter
 import com.example.scanlearn.databinding.ActivityTeacherAnalyticsBinding
 import com.example.scanlearn.models.CategoryAnalytics
 import com.example.scanlearn.models.LearningObjectAnalytics
+import com.example.scanlearn.services.AiGovernanceService
+import com.example.scanlearn.services.GeminiTeacherCopilotService
 import com.example.scanlearn.services.RealtimeDbService
+import com.example.scanlearn.services.StorageService
 import com.example.scanlearn.utils.AppConstants
+import kotlinx.coroutines.launch
 
 class TeacherAnalyticsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTeacherAnalyticsBinding
     private lateinit var dbService: RealtimeDbService
+    private lateinit var storageService: StorageService
+    private val aiService = GeminiTeacherCopilotService()
+    private val aiGovernanceService = AiGovernanceService()
+    private var latestObjectAnalytics: List<LearningObjectAnalytics> = emptyList()
+    private var latestCategoryAnalytics: List<CategoryAnalytics> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,8 +34,10 @@ class TeacherAnalyticsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         dbService = RealtimeDbService()
+        storageService = StorageService(this)
 
         binding.btnBack.setOnClickListener { finish() }
+        binding.btnGenerateAiSummary.setOnClickListener { generateAiSummary() }
         binding.rvLowConfidence.layoutManager = LinearLayoutManager(this)
         binding.rvWeakQuiz.layoutManager = LinearLayoutManager(this)
         binding.rvCategoryConfusion.layoutManager = LinearLayoutManager(this)
@@ -70,6 +82,8 @@ class TeacherAnalyticsActivity : AppCompatActivity() {
         objectAnalytics: List<LearningObjectAnalytics>,
         categoryAnalytics: List<CategoryAnalytics>
     ) {
+        latestObjectAnalytics = objectAnalytics
+        latestCategoryAnalytics = categoryAnalytics
         val lowConfidenceObjects = objectAnalytics
             .filter { it.lowConfidenceSelections > 0 }
             .sortedByDescending { it.lowConfidenceSelections }
@@ -120,6 +134,64 @@ class TeacherAnalyticsActivity : AppCompatActivity() {
             binding.tvCategoryConfusionEmpty.visibility = View.GONE
             binding.rvCategoryConfusion.visibility = View.VISIBLE
             binding.rvCategoryConfusion.adapter = CategoryInsightAdapter(confusedCategories)
+        }
+    }
+
+    private fun generateAiSummary() {
+        binding.tvAiSummary.text = "Generating AI summary..."
+        val currentUser = storageService.getUser()
+        lifecycleScope.launch {
+            try {
+                val summary = aiService.summarizeAnalytics(
+                    overview = binding.tvOverview.text.toString(),
+                    lowConfidenceNotes = latestObjectAnalytics
+                        .sortedByDescending { it.lowConfidenceSelections }
+                        .take(3)
+                        .map { "${it.objectName}: ${it.lowConfidenceSelections} low-confidence scans" },
+                    weakQuizNotes = latestObjectAnalytics
+                        .filter { it.quizAttempts > 0 }
+                        .sortedBy { it.averageQuizScorePercent }
+                        .take(3)
+                        .map { "${it.objectName}: ${it.averageQuizScorePercent}% average" },
+                    categoryNotes = latestCategoryAnalytics
+                        .sortedByDescending { it.manualCorrections + it.lowConfidenceSelections }
+                        .take(3)
+                        .map { "${it.category}: ${it.manualCorrections} manual fixes, ${it.lowConfidenceSelections} low-confidence selections" }
+                )
+                aiGovernanceService.saveDraftVariant(
+                    targetType = "analytics",
+                    targetId = "teacher_analytics_grade3",
+                    feature = "analytics_summary",
+                    generatedText = summary,
+                    createdBy = currentUser?.id.orEmpty(),
+                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
+                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION
+                )
+                aiGovernanceService.logUsage(
+                    userId = currentUser?.id.orEmpty(),
+                    role = currentUser?.role.orEmpty(),
+                    feature = "analytics_summary",
+                    targetType = "analytics",
+                    targetId = "teacher_analytics_grade3",
+                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
+                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION,
+                    status = "success"
+                )
+                binding.tvAiSummary.text = summary
+            } catch (e: Exception) {
+                aiGovernanceService.logUsage(
+                    userId = currentUser?.id.orEmpty(),
+                    role = currentUser?.role.orEmpty(),
+                    feature = "analytics_summary",
+                    targetType = "analytics",
+                    targetId = "teacher_analytics_grade3",
+                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
+                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION,
+                    status = "failed",
+                    errorMessage = e.message.orEmpty()
+                )
+                binding.tvAiSummary.text = "AI summary failed: ${e.message ?: "unknown error"}"
+            }
         }
     }
 
