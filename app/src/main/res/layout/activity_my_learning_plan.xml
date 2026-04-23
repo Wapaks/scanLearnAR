@@ -72,7 +72,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Current Pilot"
+                            android:text="Current Track"
                             android:textColor="#CCFFFFFF"
                             android:textSize="13sp" />
 
@@ -94,7 +94,7 @@
                             android:background="@drawable/bg_badge_yellow"
                             android:paddingHorizontal="14dp"
                             android:paddingVertical="6dp"
-                            android:text="Grade 3"
+                            android:text="Grade"
                             android:textColor="@color/text_primary"
                             android:textStyle="bold" />
                     </LinearLayout>

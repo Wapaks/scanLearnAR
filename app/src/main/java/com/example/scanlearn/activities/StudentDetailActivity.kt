@@ -12,15 +12,22 @@ import com.example.scanlearn.adapters.WeakTopicAdapter
 import com.example.scanlearn.databinding.ActivityStudentDetailBinding
 import com.example.scanlearn.models.LowConfidenceScanInsight
 import com.example.scanlearn.models.LearningObject
+import com.example.scanlearn.models.Lesson
 import com.example.scanlearn.models.Mission
+import com.example.scanlearn.models.Quarter
 import com.example.scanlearn.models.QuizAttempt
 import com.example.scanlearn.models.ScanAttempt
 import com.example.scanlearn.models.StudentProgress
 import com.example.scanlearn.models.Submission
+import com.example.scanlearn.models.Unit as CurriculumUnit
 import com.example.scanlearn.models.WeakTopicInsight
+import com.example.scanlearn.repositories.CurriculumRepository
+import com.example.scanlearn.repositories.LessonRepository
+import com.example.scanlearn.repositories.ProgressRepository
 import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
 import com.example.scanlearn.utils.AppConstants
+import com.example.scanlearn.utils.SchoolStructure
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -34,6 +41,12 @@ class StudentDetailActivity : AppCompatActivity() {
     private var lowConfidenceItems: List<LowConfidenceScanInsight> = emptyList()
     private var weakCategoryItems: List<WeakTopicInsight> = emptyList()
     private var weakObjectItems: List<WeakTopicInsight> = emptyList()
+    private var remediationLesson: Lesson? = null
+    private var remediationMission: Mission? = null
+    private var studentGradeLevel: String = SchoolStructure.defaultGradeLevelForRole("student")
+    private val curriculumRepository = CurriculumRepository()
+    private val lessonRepository = LessonRepository()
+    private val progressRepository = ProgressRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,16 +81,36 @@ class StudentDetailActivity : AppCompatActivity() {
 
         dbService.getLearningObjects { objects ->
             val objectMap = objects.associateBy { it.id }
-            dbService.getSubmissions(student.userId) { submissions ->
-                dbService.getQuizAttempts(student.userId) { quizAttempts ->
-                    dbService.getScanAttempts(student.userId) { scanAttempts ->
-                        runOnUiThread {
-                            binding.loadingIndicator.visibility = View.GONE
-                            binding.contentGroup.visibility = View.VISIBLE
-                            bindRecentLearned(submissions)
-                            bindQuizHistory(quizAttempts)
-                            bindScanInsights(scanAttempts, objectMap)
-                            bindWeakTopics(quizAttempts, objectMap)
+            dbService.getUser(student.userId) { userProfile ->
+                studentGradeLevel = SchoolStructure.resolveGradeLevel(
+                    userProfile?.gradeLevel.orEmpty(),
+                    userProfile?.role ?: "student"
+                )
+                dbService.getSubmissions(student.userId) { submissions ->
+                    dbService.getQuizAttempts(student.userId) { quizAttempts ->
+                        dbService.getScanAttempts(student.userId) { scanAttempts ->
+                            runOnUiThread {
+                                binding.loadingIndicator.visibility = View.GONE
+                                binding.contentGroup.visibility = View.VISIBLE
+                                bindRecentLearned(submissions)
+                                bindQuizHistory(quizAttempts)
+                                bindScanInsights(scanAttempts, objectMap)
+                                bindWeakTopics(quizAttempts, objectMap)
+                            }
+                            bindCurriculumInsight(
+                                studentId = student.userId,
+                                gradeLevel = SchoolStructure.resolveGradeLevel(
+                                    userProfile?.gradeLevel.orEmpty(),
+                                    userProfile?.role ?: "student"
+                                )
+                            )
+                            bindMissionOutcomeInsight(
+                                studentId = student.userId,
+                                gradeLevel = SchoolStructure.resolveGradeLevel(
+                                    userProfile?.gradeLevel.orEmpty(),
+                                    userProfile?.role ?: "student"
+                                )
+                            )
                         }
                     }
                 }
@@ -104,6 +137,9 @@ class StudentDetailActivity : AppCompatActivity() {
                 binding.lowConfidenceSection.requestFocus()
             }
         }
+        binding.btnOpenLinkedLesson.setOnClickListener { openLinkedLesson() }
+        binding.btnSendTeacherNote.setOnClickListener { openTeacherNote() }
+        binding.btnRelaunchRetryPath.setOnClickListener { relaunchRetryPath() }
     }
 
     private fun bindRecentLearned(submissions: List<Submission>) {
@@ -259,41 +295,246 @@ class StudentDetailActivity : AppCompatActivity() {
         val categoryLabel = weakCategory?.objectName ?: "Mixed Review"
         val teacher = storageService.getUser()
         val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(Date())
-        val missionId = "mission_" + student.userId + "_" + System.currentTimeMillis()
         val objectIds = weakObjects.mapNotNull { it.itemId.takeIf { value -> value.isNotBlank() && value != "unknown" } }
+        binding.btnAssignFollowUpMission.isEnabled = false
+        curriculumRepository.getQuartersForGrade(studentGradeLevel) { quarters ->
+            val quarter = quarters.firstOrNull()
+            lessonRepository.getAllLessons { lessons ->
+                val linkedLesson = lessons
+                    .filter { quarter == null || it.quarterId == quarter.id }
+                    .firstOrNull { lesson -> lesson.linkedObjectIds.any { it in objectIds } }
+                    ?: lessons.firstOrNull { quarter == null || it.quarterId == quarter.id }
 
+                val missionId = "mission_" + student.userId + "_" + System.currentTimeMillis()
+                val mission = Mission(
+                    id = missionId,
+                    title = "${student.name} - $categoryLabel Reinforcement",
+                    description = buildString {
+                        append("Follow-up mission created for ${student.name} to review low-scoring topics in $categoryLabel.")
+                        if (linkedLesson != null) {
+                            append(" Recommended lesson: ${linkedLesson.title}.")
+                        }
+                    },
+                    missionType = "intervention_follow_up",
+                    gradeLevel = linkedLesson?.gradeLevel ?: studentGradeLevel,
+                    quarterId = linkedLesson?.quarterId ?: quarter?.id.orEmpty(),
+                    lessonIds = linkedLesson?.id?.let { listOf(it) } ?: emptyList(),
+                    objectsToFind = objectIds.ifEmpty { linkedLesson?.linkedObjectIds ?: listOf("review_required") },
+                    sectionIds = listOf(SchoolStructure.resolveSectionName(student.section)),
+                    releasedSectionIds = listOf(SchoolStructure.resolveSectionName(student.section)),
+                    category = categoryLabel.lowercase(),
+                    active = true,
+                    createdBy = teacher?.id ?: "",
+                    createdAt = timestamp,
+                    updatedAt = timestamp,
+                    recommendedForStudentId = student.userId
+                )
+
+                dbService.saveMission(mission) { success ->
+                    runOnUiThread {
+                        binding.btnAssignFollowUpMission.isEnabled = true
+                        if (success) {
+                            showFollowUpMissionDraft()
+                            Toast.makeText(
+                                this,
+                                "Follow-up mission aligned to the current curriculum path.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                this,
+                                "Could not save the follow-up mission. Please try again.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun bindCurriculumInsight(studentId: String, gradeLevel: String) {
+        curriculumRepository.getQuartersForGrade(gradeLevel) { quarters ->
+            val quarter = quarters.firstOrNull()
+            if (quarter == null) {
+                runOnUiThread {
+                    binding.tvCurriculumSummary.text = "No active quarter found for this student yet."
+                    binding.tvMasterySummary.text = "Mastery records are not available yet."
+                }
+                return@getQuartersForGrade
+            }
+
+            curriculumRepository.getUnitsForQuarter(quarter.id) { units ->
+                progressRepository.getStudentLessonProgressMap(studentId) { progressMap ->
+                    progressRepository.getMasteryRecords(studentId) { masteryRecords ->
+                        loadTotalLessons(quarter, units, progressMap.size) { totalLessons ->
+                            val completedLessons = progressMap.values.count { it.status == "completed" }
+                            val mastered = masteryRecords.values.count { it.masteryStatus == "mastered" }
+                            val developing = masteryRecords.values.count { it.masteryStatus != "mastered" }
+                            runOnUiThread {
+                                binding.tvCurriculumSummary.text =
+                                    "${quarter.title}: $completedLessons of $totalLessons lessons complete."
+                                binding.tvMasterySummary.text =
+                                    "Mastered competencies: $mastered. Developing or not yet mastered: $developing."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun bindMissionOutcomeInsight(studentId: String, gradeLevel: String) {
+        curriculumRepository.getQuartersForGrade(gradeLevel) { quarters ->
+            val quarter = quarters.firstOrNull()
+            dbService.getAllMissions { missions ->
+                dbService.getStudentMissionProgressMap(studentId) { missionProgressMap ->
+                    lessonRepository.getAllLessons { lessons ->
+                        val activeQuarterMissions = missions.filter { mission ->
+                            mission.active &&
+                                (mission.gradeLevel.isBlank() || mission.gradeLevel.equals(gradeLevel, ignoreCase = true)) &&
+                                (quarter == null || mission.quarterId.isBlank() || mission.quarterId == quarter.id)
+                        }
+                        val completed = activeQuarterMissions.count { missionProgressMap[it.id]?.completed == true }
+                        val stalledMission = activeQuarterMissions.firstOrNull {
+                            val progress = missionProgressMap[it.id]
+                            progress != null && !progress.completed && progress.progressPercent in 1..74
+                        }
+                        val nextMission = activeQuarterMissions.firstOrNull {
+                            missionProgressMap[it.id] == null || missionProgressMap[it.id]?.completed == false
+                        }
+                        val recommendedLesson = lessons.firstOrNull { lesson ->
+                            lesson.id in (stalledMission?.lessonIds ?: nextMission?.lessonIds.orEmpty())
+                        }
+                        remediationMission = stalledMission ?: nextMission
+                        remediationLesson = recommendedLesson
+
+                        runOnUiThread {
+                            binding.tvMissionSummary.text = if (activeQuarterMissions.isEmpty()) {
+                                "No lesson-linked missions are active for this learner yet."
+                            } else {
+                                "$completed of ${activeQuarterMissions.size} quarter missions completed. ${activeQuarterMissions.size - completed} still need teacher follow-through or learner retry."
+                            }
+                            binding.tvRemediationSummary.text = when {
+                                stalledMission != null && recommendedLesson != null ->
+                                    "Stalled mission detected: ${stalledMission.title}. Recommended next step: revisit ${recommendedLesson.title} and then relaunch the mission."
+                                nextMission != null && recommendedLesson != null ->
+                                    "Next curriculum move: guide the learner through ${recommendedLesson.title}, then continue with ${nextMission.title}."
+                                else ->
+                                    "No urgent remediation signal yet. Keep monitoring lesson performance and mission completion."
+                            }
+                            binding.btnOpenLinkedLesson.isEnabled = remediationLesson != null
+                            binding.btnRelaunchRetryPath.isEnabled = remediationLesson != null || remediationMission != null
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun openLinkedLesson() {
+        val lesson = remediationLesson
+        if (lesson == null) {
+            Toast.makeText(this, "No linked lesson is ready for review yet.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        startActivity(android.content.Intent(this, LessonStudioActivity::class.java).apply {
+            putExtra(AppConstants.EXTRA_LESSON_ID, lesson.id)
+        })
+    }
+
+    private fun openTeacherNote() {
+        startActivity(android.content.Intent(this, ChatConversationActivity::class.java).apply {
+            putExtra(AppConstants.EXTRA_CHAT_PARTNER_ID, student.userId)
+            putExtra(AppConstants.EXTRA_CHAT_PARTNER_NAME, student.name)
+            putExtra(AppConstants.EXTRA_CHAT_PARTNER_ROLE, "student")
+        })
+    }
+
+    private fun relaunchRetryPath() {
+        val teacher = storageService.getUser()
+        val lesson = remediationLesson
+        val baseMission = remediationMission
+        if (lesson == null && baseMission == null) {
+            Toast.makeText(this, "No retry path is ready yet for this learner.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        binding.btnRelaunchRetryPath.isEnabled = false
+        val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(Date())
         val mission = Mission(
-            id = missionId,
-            title = "${student.name} - $categoryLabel Reinforcement",
-            description = "Follow-up mission created for ${student.name} to review low-scoring topics in $categoryLabel.",
-            objectsToFind = objectIds.ifEmpty { listOf("review_required") },
-            sectionIds = listOf(student.section),
-            category = categoryLabel.lowercase(),
+            id = "retry_" + student.userId + "_" + System.currentTimeMillis(),
+            title = "${student.name} - Retry Path",
+            description = buildString {
+                append("Retry path created for ${student.name} based on current mission outcome signals.")
+                if (lesson != null) {
+                    append(" Revisit ${lesson.title} and retry the guided mission tasks.")
+                }
+            },
+            missionType = "retry_remediation",
+            gradeLevel = lesson?.gradeLevel ?: baseMission?.gradeLevel.orEmpty().ifBlank { studentGradeLevel },
+            quarterId = lesson?.quarterId ?: baseMission?.quarterId.orEmpty(),
+            lessonIds = lesson?.id?.let { listOf(it) } ?: baseMission?.lessonIds.orEmpty(),
+            objectsToFind = when {
+                lesson != null && lesson.linkedObjectIds.isNotEmpty() -> lesson.linkedObjectIds
+                baseMission != null && baseMission.objectsToFind.isNotEmpty() -> baseMission.objectsToFind
+                else -> weakObjectItems.map { it.itemId }.filter { it.isNotBlank() && it != "unknown" }
+            },
+            sectionIds = listOf(SchoolStructure.resolveSectionName(student.section)),
+            releasedSectionIds = listOf(SchoolStructure.resolveSectionName(student.section)),
+            category = baseMission?.category ?: weakCategoryItems.firstOrNull()?.itemId ?: "science",
             active = true,
-            createdBy = teacher?.id ?: "",
+            createdBy = teacher?.id.orEmpty(),
             createdAt = timestamp,
+            updatedAt = timestamp,
             recommendedForStudentId = student.userId
         )
 
-        binding.btnAssignFollowUpMission.isEnabled = false
         dbService.saveMission(mission) { success ->
             runOnUiThread {
-                binding.btnAssignFollowUpMission.isEnabled = true
+                binding.btnRelaunchRetryPath.isEnabled = true
                 if (success) {
-                    showFollowUpMissionDraft()
+                    remediationMission = mission
                     Toast.makeText(
                         this,
-                        "Follow-up mission assigned to ${student.section} section.",
+                        "Retry path relaunched for ${student.name}.",
                         Toast.LENGTH_LONG
                     ).show()
                 } else {
                     Toast.makeText(
                         this,
-                        "Could not save the follow-up mission. Please try again.",
+                        "Could not relaunch the retry path.",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         }
     }
+
+    private fun loadTotalLessons(
+        quarter: Quarter,
+        units: List<CurriculumUnit>,
+        fallbackTotal: Int,
+        onResult: (Int) -> Unit
+    ) {
+        if (units.isEmpty()) {
+            onResult(fallbackTotal)
+            return
+        }
+
+        val lessons = mutableListOf<Lesson>()
+        var remaining = units.size
+        units.forEach { unit ->
+            lessonRepository.getLessonsForUnit(unit.id) { unitLessons ->
+                synchronized(lessons) {
+                    lessons.addAll(unitLessons.filter { it.quarterId == quarter.id })
+                    remaining -= 1
+                    if (remaining == 0) {
+                        onResult(lessons.distinctBy { it.id }.size.coerceAtLeast(fallbackTotal))
+                    }
+                }
+            }
+        }
+    }
+
 }

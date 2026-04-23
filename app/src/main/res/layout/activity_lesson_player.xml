@@ -253,7 +253,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:layout_marginTop="12dp"
-                    android:text="Back to Unit"
+                    android:text="Back to Learning Plan"
                     android:textAllCaps="false"
                     app:cornerRadius="14dp" />
             </LinearLayout>

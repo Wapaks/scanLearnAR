@@ -23,8 +23,23 @@ class MissionAdapter(
         val mission = missions[position]
         holder.binding.tvTitle.text = mission.title
         holder.binding.tvDescription.text = mission.description
-        holder.binding.tvObjects.text = "Objects to find: ${mission.objectsToFind.joinToString(", ")}"
-        holder.binding.tvProgress.text = "Progress: ${mission.completedObjectIds.size}/${mission.objectsToFind.distinct().size} (${mission.progressPercent}%)"
+        holder.binding.tvCurriculum.text = when {
+            mission.lessonIds.isNotEmpty() -> "Linked to ${mission.lessonIds.size} lesson(s) in the current quarter"
+            mission.quarterId.isNotBlank() -> "Quarter-linked task for ${mission.gradeLevel.ifBlank { "your grade" }}"
+            else -> "General teacher task"
+        }
+        val releasedSections = if (mission.releasedSectionIds.isEmpty()) {
+            "all sections in scope"
+        } else {
+            mission.releasedSectionIds.joinToString(", ")
+        }
+        holder.binding.tvObjects.text = if (mission.objectsToFind.isEmpty()) {
+            "Task focus: Review the linked lesson and complete the teacher instructions."
+        } else {
+            "Task focus: ${mission.objectsToFind.joinToString(", ")}"
+        }
+        holder.binding.tvProgress.text =
+            "Progress: ${mission.progressPercent}% - Released to $releasedSections"
 
         if (mission.completed) {
             holder.binding.tvCompleted.visibility = View.VISIBLE

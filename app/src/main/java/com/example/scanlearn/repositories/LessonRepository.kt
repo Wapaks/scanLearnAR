@@ -21,6 +21,22 @@ class LessonRepository(
         dbService.getLessonsForUnit(unitId, onResult)
     }
 
+    fun getReleasedLessonsForUnit(
+        unitId: String,
+        section: String,
+        onResult: (List<Lesson>) -> Unit
+    ) {
+        dbService.getReleasedLessonsForUnit(unitId, section, onResult)
+    }
+
+    fun getReleasedLessonsForQuarter(
+        quarterId: String,
+        section: String,
+        onResult: (List<Lesson>) -> Unit
+    ) {
+        dbService.getReleasedLessonsForQuarter(quarterId, section, onResult)
+    }
+
     fun getActivitiesForLesson(lessonId: String, onResult: (List<LessonActivity>) -> Unit) {
         dbService.getActivitiesForLesson(lessonId, onResult)
     }

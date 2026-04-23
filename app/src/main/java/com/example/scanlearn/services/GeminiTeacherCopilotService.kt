@@ -4,11 +4,11 @@ import com.google.firebase.ai.FirebaseAI
 import com.google.firebase.ai.type.content
 import com.google.firebase.ai.type.generationConfig
 
-class GeminiTeacherCopilotService {
+class GeminiTeacherCopilotService : TeacherCopilotService {
 
     private val teacherModel by lazy {
         FirebaseAI.instance.generativeModel(
-            modelName = DEFAULT_MODEL,
+            modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
             generationConfig = generationConfig {
                 temperature = 0.4f
                 maxOutputTokens = 1200
@@ -16,7 +16,7 @@ class GeminiTeacherCopilotService {
             systemInstruction = content("system") {
                 text(
                     "You are the ScanLearn Teacher Copilot. " +
-                        "You write safe, age-appropriate, curriculum-first content for Grade 3 Science. " +
+                        "You write safe, age-appropriate, curriculum-first elementary content for the teacher's selected grade level. " +
                         "Keep responses short, clear, and useful for elementary learners. " +
                         "Do not produce unsafe, off-topic, or unbounded content. " +
                         "When asked for structured output, strictly follow the requested labels."
@@ -25,13 +25,13 @@ class GeminiTeacherCopilotService {
         )
     }
 
-    suspend fun generateLessonDraft(
+    override suspend fun generateLessonDraft(
         gradeLevel: String,
         quarterTitle: String,
         unitTitle: String,
         lessonTitleHint: String,
         lessonObjectiveHint: String
-    ): LessonDraftSuggestion {
+    ): TeacherCopilotService.LessonDraftSuggestion {
         val prompt = """
             Create a short curriculum-aligned lesson draft for ScanLearn.
             Grade: $gradeLevel
@@ -43,18 +43,18 @@ class GeminiTeacherCopilotService {
             Return exactly this format:
             TITLE: <short lesson title>
             OBJECTIVE: <one-sentence objective>
-            SUMMARY: <2 to 4 short sentences for Grade 3 learners>
+            SUMMARY: <2 to 4 short sentences for the selected grade level>
         """.trimIndent()
 
         return parseLessonDraft(runTextPrompt(prompt))
     }
 
-    suspend fun simplifyLesson(
+    override suspend fun simplifyLesson(
         gradeLevel: String,
         title: String,
         objective: String,
         summary: String
-    ): LessonDraftSuggestion {
+    ): TeacherCopilotService.LessonDraftSuggestion {
         val prompt = """
             Simplify this lesson for $gradeLevel learners.
             Title: $title
@@ -70,12 +70,12 @@ class GeminiTeacherCopilotService {
         return parseLessonDraft(runTextPrompt(prompt))
     }
 
-    suspend fun generateQuizActivities(
+    override suspend fun generateQuizActivities(
         gradeLevel: String,
         lessonTitle: String,
         objective: String,
         summary: String
-    ): List<ActivitySuggestion> {
+    ): List<TeacherCopilotService.ActivitySuggestion> {
         val prompt = """
             Create 3 short formative activities for ScanLearn.
             Grade: $gradeLevel
@@ -110,12 +110,12 @@ class GeminiTeacherCopilotService {
         return parseActivities(runTextPrompt(prompt))
     }
 
-    suspend fun generateMissionDraft(
+    override suspend fun generateMissionDraft(
         gradeLevel: String,
         sectionNames: List<String>,
         category: String,
         objectNames: List<String>
-    ): MissionDraftSuggestion {
+    ): TeacherCopilotService.MissionDraftSuggestion {
         val prompt = """
             Create a teacher mission draft for ScanLearn.
             Grade: $gradeLevel
@@ -132,7 +132,7 @@ class GeminiTeacherCopilotService {
         return parseMissionDraft(runTextPrompt(prompt))
     }
 
-    suspend fun summarizeAnalytics(
+    override suspend fun summarizeAnalytics(
         overview: String,
         lowConfidenceNotes: List<String>,
         weakQuizNotes: List<String>,
@@ -161,8 +161,8 @@ class GeminiTeacherCopilotService {
         }
     }
 
-    private fun parseLessonDraft(text: String): LessonDraftSuggestion {
-        return LessonDraftSuggestion(
+    private fun parseLessonDraft(text: String): TeacherCopilotService.LessonDraftSuggestion {
+        return TeacherCopilotService.LessonDraftSuggestion(
             title = extractValue(text, "TITLE"),
             objective = extractValue(text, "OBJECTIVE"),
             summary = extractValue(text, "SUMMARY"),
@@ -170,8 +170,8 @@ class GeminiTeacherCopilotService {
         )
     }
 
-    private fun parseMissionDraft(text: String): MissionDraftSuggestion {
-        return MissionDraftSuggestion(
+    private fun parseMissionDraft(text: String): TeacherCopilotService.MissionDraftSuggestion {
+        return TeacherCopilotService.MissionDraftSuggestion(
             title = extractValue(text, "TITLE"),
             description = extractValue(text, "DESCRIPTION"),
             category = extractValue(text, "CATEGORY").lowercase(),
@@ -179,7 +179,7 @@ class GeminiTeacherCopilotService {
         )
     }
 
-    private fun parseActivities(text: String): List<ActivitySuggestion> {
+    private fun parseActivities(text: String): List<TeacherCopilotService.ActivitySuggestion> {
         val chunks = text.split(Regex("ACTIVITY\\s+\\d+")).map { it.trim() }.filter { it.isNotBlank() }
         return chunks.mapNotNull { chunk ->
             val type = extractValue(chunk, "TYPE")
@@ -189,7 +189,7 @@ class GeminiTeacherCopilotService {
             if (type.isBlank() || prompt.isBlank() || answer.isBlank()) {
                 null
             } else {
-                ActivitySuggestion(
+                TeacherCopilotService.ActivitySuggestion(
                     type = type,
                     prompt = prompt,
                     instructions = instructions,
@@ -210,30 +210,4 @@ class GeminiTeacherCopilotService {
         return pattern.find(text)?.groupValues?.getOrNull(1)?.trim().orEmpty()
     }
 
-    data class LessonDraftSuggestion(
-        val title: String,
-        val objective: String,
-        val summary: String,
-        val rawText: String
-    )
-
-    data class ActivitySuggestion(
-        val type: String,
-        val prompt: String,
-        val instructions: String,
-        val options: List<String>,
-        val answer: String
-    )
-
-    data class MissionDraftSuggestion(
-        val title: String,
-        val description: String,
-        val category: String,
-        val rawText: String
-    )
-
-    companion object {
-        const val DEFAULT_MODEL = "gemini-2.5-flash"
-        const val PROMPT_VERSION = "teacher-copilot-v1"
-    }
 }

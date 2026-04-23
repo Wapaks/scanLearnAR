@@ -15,6 +15,7 @@ import com.example.scanlearn.repositories.ProgressRepository
 import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
 import com.example.scanlearn.utils.AppConstants
+import com.example.scanlearn.utils.SchoolStructure
 
 class MyLearningPlanActivity : AppCompatActivity() {
 
@@ -38,7 +39,11 @@ class MyLearningPlanActivity : AppCompatActivity() {
             startActivity(Intent(this, ProgressActivity::class.java))
         }
         binding.btnOpenMissionCenter.setOnClickListener {
-            startActivity(Intent(this, MissionsActivity::class.java))
+            val quarter = binding.btnOpenQuarter.tag as? Quarter
+            startActivity(Intent(this, MissionsActivity::class.java).apply {
+                putExtra(AppConstants.EXTRA_QUARTER_ID, quarter?.id)
+                putExtra(AppConstants.EXTRA_QUARTER_TITLE, quarter?.title)
+            })
         }
 
         loadLearningPlan()
@@ -46,7 +51,7 @@ class MyLearningPlanActivity : AppCompatActivity() {
 
     private fun loadLearningPlan() {
         val user = storage.getUser() ?: return
-        val gradeLevel = user.gradeLevel.ifBlank { "Grade 3" }
+        val gradeLevel = SchoolStructure.resolveGradeLevel(user.gradeLevel, user.role)
 
         binding.loadingIndicator.visibility = View.VISIBLE
         binding.contentGroup.visibility = View.GONE
@@ -67,7 +72,12 @@ class MyLearningPlanActivity : AppCompatActivity() {
 
             curriculumRepository.getUnitsForQuarter(activeQuarter.id) { units ->
                 progressRepository.getStudentLessonProgressMap(user.id) { progressMap ->
-                    loadQuarterLessons(activeQuarter, units, progressMap)
+                    loadQuarterLessons(
+                        activeQuarter,
+                        units,
+                        progressMap,
+                        SchoolStructure.resolveSectionName(user.section.ifBlank { user.sectionId })
+                    )
                 }
             }
         }
@@ -76,7 +86,8 @@ class MyLearningPlanActivity : AppCompatActivity() {
     private fun loadQuarterLessons(
         quarter: Quarter,
         units: List<CurriculumUnit>,
-        progressMap: Map<String, StudentLessonProgress>
+        progressMap: Map<String, StudentLessonProgress>,
+        section: String
     ) {
         val lessons = mutableListOf<Lesson>()
         if (units.isEmpty()) {
@@ -86,7 +97,7 @@ class MyLearningPlanActivity : AppCompatActivity() {
 
         var remaining = units.size
         units.forEach { unit ->
-            lessonRepository.getLessonsForUnit(unit.id) { unitLessons ->
+            lessonRepository.getReleasedLessonsForUnit(unit.id, section) { unitLessons ->
                 synchronized(lessons) {
                     lessons.addAll(unitLessons)
                     remaining -= 1
@@ -118,9 +129,17 @@ class MyLearningPlanActivity : AppCompatActivity() {
             progressMap[lesson.id]?.status != "completed"
         } ?: lessons.lastOrNull()
         val user = storage.getUser()
-        val section = user?.section?.ifBlank { user.sectionId }.orEmpty()
+        val section = SchoolStructure.resolveSectionName(user?.section?.ifBlank { user.sectionId }.orEmpty())
+        val visibleLessonIds = lessons.map { it.id }.toSet()
 
-        dbService.getMissionsForSection(section) { missions ->
+        dbService.getMissionsForQuarter(
+            quarter.id,
+            section,
+            SchoolStructure.resolveGradeLevel(user?.gradeLevel.orEmpty(), user?.role ?: "student")
+        ) { missions ->
+            val visibleMissions = missions.filter { mission ->
+                mission.lessonIds.isEmpty() || mission.lessonIds.any { it in visibleLessonIds }
+            }
             runOnUiThread {
                 binding.loadingIndicator.visibility = View.GONE
                 binding.contentGroup.visibility = View.VISIBLE
@@ -133,7 +152,7 @@ class MyLearningPlanActivity : AppCompatActivity() {
                 binding.tvProgressMeta.text = "$completedLessons of ${lessons.size} lessons complete"
                 binding.tvUnitCount.text = units.size.toString()
                 binding.tvLessonCount.text = lessons.size.toString()
-                binding.tvMissionCount.text = missions.count { it.active }.toString()
+                binding.tvMissionCount.text = visibleMissions.count { it.active }.toString()
                 binding.tvNextLesson.text = nextLesson?.title ?: "Your lessons will appear here soon."
 
                 binding.btnOpenQuarter.isEnabled = true

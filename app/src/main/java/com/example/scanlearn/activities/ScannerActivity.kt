@@ -19,9 +19,11 @@ import com.example.scanlearn.activities.ObjectSelectionActivity.Companion.ORIGIN
 import com.example.scanlearn.adapters.LearningObjectAdapter
 import com.example.scanlearn.databinding.ActivityScannerBinding
 import com.example.scanlearn.models.LearningObject
+import com.example.scanlearn.services.StorageService
 import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.utils.AppColors
 import com.example.scanlearn.utils.AppConstants
+import com.example.scanlearn.utils.SchoolStructure
 
 class ScannerActivity : AppCompatActivity() {
 
@@ -29,6 +31,7 @@ class ScannerActivity : AppCompatActivity() {
     private var mode = AppConstants.MODE_EXPLORER
     private var missionId: String = ""
     private lateinit var dbService: RealtimeDbService
+    private lateinit var storageService: StorageService
 
     private var allObjects: List<LearningObject> = emptyList()
     private var currentCategory = "animals"
@@ -74,6 +77,7 @@ class ScannerActivity : AppCompatActivity() {
         mode = intent.getStringExtra(AppConstants.EXTRA_MODE) ?: AppConstants.MODE_EXPLORER
         missionId = intent.getStringExtra(AppConstants.EXTRA_MISSION_ID) ?: ""
         dbService = RealtimeDbService()
+        storageService = StorageService(this)
 
         val modeColor = AppColors.getModeColor(mode)
         binding.toolbar.setBackgroundColor(modeColor)
@@ -106,7 +110,38 @@ class ScannerActivity : AppCompatActivity() {
         binding.tabPlants.setOnClickListener { showCategory("plants") }
         binding.tabClassroom.setOnClickListener { showCategory("classroom") }
 
-        loadObjects()
+        validateEntryAndLoadObjects()
+    }
+
+    private fun validateEntryAndLoadObjects() {
+        if (mode != AppConstants.MODE_MISSION || missionId.isBlank()) {
+            loadObjects()
+            return
+        }
+
+        val user = storageService.getUser()
+        val section = SchoolStructure.resolveSectionName(user?.section?.ifBlank { user.sectionId }.orEmpty())
+        val gradeLevel = SchoolStructure.resolveGradeLevel(user?.gradeLevel.orEmpty(), user?.role ?: "student")
+        dbService.getMission(missionId) { mission ->
+            val visible = mission != null &&
+                mission.active &&
+                (mission.gradeLevel.isBlank() || mission.gradeLevel.equals(gradeLevel, ignoreCase = true)) &&
+                (mission.sectionIds.isEmpty() || mission.sectionIds.any { it.equals(section, ignoreCase = true) }) &&
+                (mission.releasedSectionIds.isEmpty() || mission.releasedSectionIds.any { it.equals(section, ignoreCase = true) })
+
+            runOnUiThread {
+                if (!visible) {
+                    Toast.makeText(
+                        this,
+                        "This mission is not currently released for your section.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    finish()
+                } else {
+                    loadObjects()
+                }
+            }
+        }
     }
 
     private fun loadObjects() {

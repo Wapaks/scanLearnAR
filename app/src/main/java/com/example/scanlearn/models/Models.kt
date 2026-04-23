@@ -23,6 +23,16 @@ data class User(
     val createdAt: String = ""
 ) : Serializable
 
+data class SectionRecord(
+    val id: String = "",
+    val name: String = "",
+    val gradeLevel: String = "",
+    val adviserId: String = "",
+    val active: Boolean = true,
+    val createdAt: String = "",
+    val updatedAt: String = ""
+) : Serializable
+
 data class ChatConversation(
     val id: String = "",
     val participantIds: List<String> = emptyList(),
@@ -92,6 +102,7 @@ data class Mission(
     val lessonIds: List<String> = emptyList(),
     val objectsToFind: List<String> = emptyList(),
     val sectionIds: List<String> = emptyList(),
+    val releasedSectionIds: List<String> = emptyList(),
     val category: String = "",
     val passingScore: Int = 0,
     val requiredCount: Int = 0,
@@ -177,6 +188,10 @@ data class StudentProgress(
     val name: String = "",
     val studentNumber: String = "",
     val section: String = "",
+    val completedLessonsCount: Int = 0,
+    val completedTasksCount: Int = 0,
+    val stalledTasksCount: Int = 0,
+    val masteredCompetenciesCount: Int = 0,
     val scannedCount: Int = 0,
     val submissionsCount: Int = 0,
     val quizAttemptsCount: Int = 0,
@@ -269,6 +284,7 @@ data class Lesson(
     val difficulty: String = "",
     val status: String = "draft",
     val createdBy: String = "",
+    val releasedSectionIds: List<String> = emptyList(),
     val aiGenerated: Boolean = false,
     val aiSource: String = "",
     val aiPromptVersion: String = "",
@@ -345,4 +361,15 @@ data class AiUsageLog(
     val status: String = "",
     val errorMessage: String = "",
     val createdAt: String = ""
+) : Serializable
+
+data class MissionAnalytics(
+    val missionId: String = "",
+    val title: String = "",
+    val quarterId: String = "",
+    val lessonIds: List<String> = emptyList(),
+    val assignedLearners: Int = 0,
+    val completedLearners: Int = 0,
+    val stuckLearners: Int = 0,
+    val completionPercent: Int = 0
 ) : Serializable

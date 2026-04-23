@@ -1,0 +1,203 @@
+package com.example.scanlearn.activities
+
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.scanlearn.adapters.ReviewQueueAdapter
+import com.example.scanlearn.databinding.ActivityTeacherReviewQueueBinding
+import com.example.scanlearn.models.AiDraftVariant
+import com.example.scanlearn.models.Lesson
+import com.example.scanlearn.models.Mission
+import com.example.scanlearn.models.ScanAttempt
+import com.example.scanlearn.models.StudentProgress
+import com.example.scanlearn.services.RealtimeDbService
+import com.example.scanlearn.utils.AppConstants
+
+class TeacherReviewQueueActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityTeacherReviewQueueBinding
+    private lateinit var dbService: RealtimeDbService
+    private var studentProgressMap: Map<String, StudentProgress> = emptyMap()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityTeacherReviewQueueBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        dbService = RealtimeDbService()
+
+        binding.btnBack.setOnClickListener { finish() }
+        loadQueue()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadQueue()
+    }
+
+    private fun loadQueue() {
+        setLoading(true)
+        dbService.getAllStudents { students ->
+            dbService.getSubmissionsForAllStudents { submissionsMap ->
+                dbService.getScannedCountForAllStudents { scannedMap ->
+                    dbService.getQuizAttemptsForAllStudents { quizAttemptsMap ->
+                        dbService.getScanAttemptsForAllStudents { scanAttemptsMap ->
+                            studentProgressMap = dbService.buildStudentProgressList(
+                                students = students,
+                                submissionsMap = submissionsMap,
+                                scannedMap = scannedMap,
+                                quizAttemptsMap = quizAttemptsMap,
+                                scanAttemptsMap = scanAttemptsMap
+                            ).associateBy { it.userId }
+
+                            dbService.getAllLessons { lessons ->
+                                dbService.getAllMissions { missions ->
+                                    dbService.getAllAiDraftVariants { variants ->
+                                        bindQueue(lessons, missions, variants, scanAttemptsMap)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun bindQueue(
+        lessons: List<Lesson>,
+        missions: List<Mission>,
+        variants: List<AiDraftVariant>,
+        scanAttemptsMap: Map<String, List<ScanAttempt>>
+    ) {
+        val lessonItems = lessons
+            .filter { it.status.equals("draft", true) || it.status.equals("review", true) }
+            .sortedByDescending { it.updatedAt }
+            .take(6)
+            .map {
+                ReviewQueueAdapter.ReviewQueueItem(
+                    tag = it.status.replaceFirstChar { c -> c.uppercase() },
+                    title = it.title,
+                    subtitle = "Lesson needs curriculum review before wider classroom use.",
+                    actionLabel = "Open Lesson",
+                    targetType = "lesson",
+                    targetId = it.id
+                )
+            }
+
+        val missionItems = missions
+            .filter { it.active && (it.lessonIds.isNotEmpty() || it.recommendedForStudentId.isNotBlank()) }
+            .sortedByDescending { it.updatedAt.ifBlank { it.createdAt } }
+            .take(4)
+            .map {
+                ReviewQueueAdapter.ReviewQueueItem(
+                    tag = "Mission",
+                    title = it.title,
+                    subtitle = if (it.recommendedForStudentId.isNotBlank()) {
+                        "Intervention mission aligned to ${it.lessonIds.size.coerceAtLeast(1)} lesson path(s)."
+                    } else {
+                        "Quarter-linked mission aligned to ${it.lessonIds.size.coerceAtLeast(1)} lesson path(s)."
+                    },
+                    actionLabel = "Open Mission",
+                    targetType = "mission",
+                    targetId = it.id
+                )
+            }
+
+        val aiItems = variants
+            .sortedByDescending { it.createdAt }
+            .take(6)
+            .map {
+                ReviewQueueAdapter.ReviewQueueItem(
+                    tag = "AI ${it.feature.replace("_", " ").replaceFirstChar { c -> c.uppercase() }}",
+                    title = "${it.targetType.replaceFirstChar { c -> c.uppercase() }} ${it.targetId}",
+                    subtitle = "Generated by ${it.modelName}. Prompt ${it.promptVersion}. Status: ${it.status}.",
+                    actionLabel = if (it.targetType == "lesson") "Review Lesson" else "Review Item",
+                    targetType = it.targetType,
+                    targetId = it.targetId
+                )
+            }
+
+        val lowConfidenceItems = scanAttemptsMap.entries
+            .flatMap { (studentId, attempts) ->
+                attempts
+                    .filter { it.confidence in 0.0001f..0.54f }
+                    .map { attempt -> studentId to attempt }
+            }
+            .sortedByDescending { it.second.createdAt }
+            .take(6)
+            .map { (studentId, attempt) ->
+                val student = studentProgressMap[studentId]
+                ReviewQueueAdapter.ReviewQueueItem(
+                    tag = "Low Confidence",
+                    title = student?.name ?: "Student $studentId",
+                    subtitle = "Confidence ${(attempt.confidence * 100).toInt()}% • object ${attempt.selectedObjectId.ifBlank { "unknown" }}",
+                    actionLabel = "Open Student",
+                    targetType = "student",
+                    targetId = studentId
+                )
+            }
+
+        runOnUiThread {
+            setLoading(false)
+            binding.tvQueueOverview.text =
+                "${lessonItems.size + missionItems.size} curriculum items, ${aiItems.size} AI drafts, ${lowConfidenceItems.size} low-confidence cases"
+
+            bindSection(
+                recyclerView = binding.rvLessonQueue,
+                emptyView = binding.tvLessonQueueEmpty,
+                items = lessonItems + missionItems
+            )
+            bindSection(
+                recyclerView = binding.rvAiQueue,
+                emptyView = binding.tvAiQueueEmpty,
+                items = aiItems
+            )
+            bindSection(
+                recyclerView = binding.rvLowConfidenceQueue,
+                emptyView = binding.tvLowConfidenceQueueEmpty,
+                items = lowConfidenceItems
+            )
+        }
+    }
+
+    private fun bindSection(
+        recyclerView: androidx.recyclerview.widget.RecyclerView,
+        emptyView: android.widget.TextView,
+        items: List<ReviewQueueAdapter.ReviewQueueItem>
+    ) {
+        if (items.isEmpty()) {
+            emptyView.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+            return
+        }
+
+        emptyView.visibility = View.GONE
+        recyclerView.visibility = View.VISIBLE
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = ReviewQueueAdapter(items) { item ->
+            when (item.targetType) {
+                "lesson" -> startActivity(Intent(this, LessonStudioActivity::class.java).apply {
+                    putExtra(AppConstants.EXTRA_LESSON_ID, item.targetId)
+                })
+                "student" -> {
+                    val student = studentProgressMap[item.targetId] ?: return@ReviewQueueAdapter
+                    startActivity(Intent(this, StudentDetailActivity::class.java).apply {
+                        putExtra(AppConstants.EXTRA_STUDENT_PROGRESS, student)
+                    })
+                }
+                "mission" -> startActivity(Intent(this, AddEditMissionActivity::class.java).apply {
+                    putExtra(AppConstants.EXTRA_MISSION_ID, item.targetId)
+                })
+                else -> startActivity(Intent(this, TeacherCurriculumActivity::class.java))
+            }
+        }
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        binding.loadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.contentScroll.visibility = if (isLoading) View.GONE else View.VISIBLE
+    }
+}

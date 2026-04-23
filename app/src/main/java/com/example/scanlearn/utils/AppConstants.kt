@@ -22,6 +22,7 @@ object AppConstants {
     const val EXTRA_UNIT_ID = "extra_unit_id"
     const val EXTRA_UNIT_TITLE = "extra_unit_title"
     const val EXTRA_LESSON_ID = "extra_lesson_id"
+    const val EXTRA_LESSON_TITLE = "extra_lesson_title"
     const val EXTRA_QUARTER_ID = "extra_quarter_id"
     const val EXTRA_QUARTER_TITLE = "extra_quarter_title"
     const val EXTRA_ASSESSMENT_ONLY = "extra_assessment_only"

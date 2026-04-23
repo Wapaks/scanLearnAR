@@ -14,6 +14,7 @@ import com.example.scanlearn.repositories.LessonRepository
 import com.example.scanlearn.repositories.ProgressRepository
 import com.example.scanlearn.services.StorageService
 import com.example.scanlearn.utils.AppConstants
+import com.example.scanlearn.utils.SchoolStructure
 
 class TestKnowledgeActivity : AppCompatActivity() {
 
@@ -36,35 +37,16 @@ class TestKnowledgeActivity : AppCompatActivity() {
 
     private fun loadLessonChoices() {
         val user = storage.getUser() ?: return
-        val gradeLevel = user.gradeLevel.ifBlank { "Grade 3" }
+        val gradeLevel = SchoolStructure.resolveGradeLevel(user.gradeLevel, user.role)
 
         curriculumRepository.getQuartersForGrade(gradeLevel) { quarters ->
             val activeQuarter = quarters.firstOrNull() ?: return@getQuartersForGrade
-            curriculumRepository.getUnitsForQuarter(activeQuarter.id) { units ->
+            lessonRepository.getReleasedLessonsForQuarter(
+                activeQuarter.id,
+                SchoolStructure.resolveSectionName(user.section.ifBlank { user.sectionId })
+            ) { lessons ->
                 progressRepository.getStudentLessonProgressMap(user.id) { progressMap ->
-                    collectLessons(units, progressMap)
-                }
-            }
-        }
-    }
-
-    private fun collectLessons(
-        units: List<CurriculumUnit>,
-        progressMap: Map<String, StudentLessonProgress>
-    ) {
-        val lessons = mutableListOf<Lesson>()
-        if (units.isEmpty()) {
-            renderLessons(lessons, progressMap)
-            return
-        }
-
-        var remaining = units.size
-        units.forEach { unit ->
-            lessonRepository.getLessonsForUnit(unit.id) { unitLessons ->
-                synchronized(lessons) {
-                    lessons.addAll(unitLessons)
-                    remaining -= 1
-                    if (remaining == 0) {
+                    runOnUiThread {
                         renderLessons(lessons.sortedBy { it.orderIndex }, progressMap)
                     }
                 }
@@ -76,18 +58,16 @@ class TestKnowledgeActivity : AppCompatActivity() {
         lessons: List<Lesson>,
         progressMap: Map<String, StudentLessonProgress>
     ) {
-        runOnUiThread {
-            binding.rvLessons.layoutManager = LinearLayoutManager(this)
-            binding.rvLessons.adapter = LessonOutlineAdapter(
-                lessons = lessons,
-                progressMap = progressMap,
-                actionLabel = "Take Quiz"
-            ) { lesson ->
-                startActivity(Intent(this, LessonPlayerActivity::class.java).apply {
-                    putExtra(AppConstants.EXTRA_LESSON_ID, lesson.id)
-                    putExtra(AppConstants.EXTRA_ASSESSMENT_ONLY, true)
-                })
-            }
+        binding.rvLessons.layoutManager = LinearLayoutManager(this)
+        binding.rvLessons.adapter = LessonOutlineAdapter(
+            lessons = lessons,
+            progressMap = progressMap,
+            actionLabel = "Take Quiz"
+        ) { lesson ->
+            startActivity(Intent(this, LessonPlayerActivity::class.java).apply {
+                putExtra(AppConstants.EXTRA_LESSON_ID, lesson.id)
+                putExtra(AppConstants.EXTRA_ASSESSMENT_ONLY, true)
+            })
         }
     }
 }

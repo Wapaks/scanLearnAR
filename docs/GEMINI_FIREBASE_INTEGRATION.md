@@ -35,6 +35,13 @@ Code entry point:
 
 - [GeminiTeacherCopilotService.kt](</D:/games/ScanLearn/app/src/main/java/com/example/scanlearn/services/GeminiTeacherCopilotService.kt>)
 
+Current abstraction layer:
+
+- [TeacherCopilotService.kt](</D:/games/ScanLearn/app/src/main/java/com/example/scanlearn/services/TeacherCopilotService.kt>)
+- [TeacherCopilotServiceFactory.kt](</D:/games/ScanLearn/app/src/main/java/com/example/scanlearn/services/TeacherCopilotServiceFactory.kt>)
+
+This means the app is now ready to keep Firebase AI as fallback while a backend Gemini gateway is built later.
+
 ## Firebase Console Setup
 
 You still need to complete the Firebase-side setup for Gemini to work.

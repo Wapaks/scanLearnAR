@@ -23,6 +23,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:tint="@android:color/white" />
         <TextView
+            android:id="@+id/tvHeaderTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -35,6 +36,7 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/tvHeaderSubtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Complete specific learning objectives"
@@ -42,6 +44,17 @@
         android:textColor="@color/text_secondary"
         android:gravity="center"
         android:padding="16dp" />
+
+    <TextView
+        android:id="@+id/tvEmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:padding="16dp"
+        android:text="No teacher tasks are released for your section yet."
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMissions"

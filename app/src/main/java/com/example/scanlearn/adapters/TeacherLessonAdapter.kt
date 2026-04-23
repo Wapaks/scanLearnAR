@@ -32,9 +32,16 @@ class TeacherLessonAdapter(
 
         fun bind(row: LessonRow) {
             val lesson = row.lesson
+            val releaseLabel = if (lesson.releasedSectionIds.isEmpty()) {
+                "no section release"
+            } else {
+                "released to ${lesson.releasedSectionIds.joinToString(", ")}"
+            }
+
             binding.tvUnitTitle.text = row.unitTitle
             binding.tvLessonTitle.text = lesson.title
-            binding.tvLessonMeta.text = "${lesson.estimatedMinutes} min • ${row.activityCount} activities"
+            binding.tvLessonMeta.text =
+                "${lesson.estimatedMinutes} min | ${row.activityCount} activities | $releaseLabel"
             binding.tvLessonStatus.text = lesson.status.replaceFirstChar { it.uppercase() }
             binding.btnOpenLesson.setOnClickListener { onOpenLesson(lesson) }
             binding.root.setOnClickListener { onOpenLesson(lesson) }

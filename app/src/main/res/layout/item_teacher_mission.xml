@@ -63,11 +63,20 @@
             android:textSize="12sp" />
 
         <TextView
+            android:id="@+id/tvCurriculum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Quarter-linked mission"
+            android:textColor="@color/primary"
+            android:textSize="12sp" />
+
+        <TextView
             android:id="@+id/tvSections"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Santan, Daisy"
+            android:text="Sections"
             android:textColor="@color/text_secondary"
             android:textSize="12sp" />
 

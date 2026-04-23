@@ -80,6 +80,45 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilQuarter"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp">
+
+                <AutoCompleteTextView
+                    android:id="@+id/etQuarter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Quarter"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilLesson"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp">
+
+                <AutoCompleteTextView
+                    android:id="@+id/etLesson"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Linked lesson"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvCurriculumHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Linking a mission to a lesson keeps it visible inside the correct grade and quarter flow."
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilCategory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -116,28 +155,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Assign to sections"
+                android:text="Release to sections"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <CheckBox
-                android:id="@+id/cbSantan"
-                android:layout_width="wrap_content"
+            <TextView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Santan" />
+                android:layout_marginTop="6dp"
+                android:text="Active missions only appear in sections released here, and only if the linked lesson is already released there too."
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
 
-            <CheckBox
-                android:id="@+id/cbDaisy"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/sectionsContainer"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Daisy" />
-
-            <CheckBox
-                android:id="@+id/cbOrchid"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Orchid" />
+                android:layout_marginTop="6dp"
+                android:orientation="vertical" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/switchActive"

@@ -3,11 +3,14 @@ package com.example.scanlearn.activities
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import com.example.scanlearn.databinding.ActivityRegisterBinding
+import com.example.scanlearn.models.SectionRecord
 import com.example.scanlearn.services.FirebaseAuthService
 import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
+import com.example.scanlearn.utils.SchoolStructure
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -15,6 +18,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var authService: FirebaseAuthService
     private lateinit var storage: StorageService
     private lateinit var dbService: RealtimeDbService
+    private var sectionRecords: List<SectionRecord> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,18 +29,71 @@ class RegisterActivity : AppCompatActivity() {
         storage = StorageService(this)
         dbService = RealtimeDbService()
 
+        setupGradeDropdown()
+        loadSectionMasterData()
+
         binding.rgRole.setOnCheckedChangeListener { _, checkedId ->
             if (checkedId == binding.rbTeacher.id) {
-                binding.sectionGroup.visibility = View.GONE
                 binding.tilStudentNumber.visibility = View.GONE
+                binding.tilSection.visibility = View.GONE
+                binding.etSection.setText("", false)
+                binding.tvSectionHelper.text = "Teachers choose the grade they handle so they only manage that grade."
+                val teacherGrade = binding.etGradeLevel.text?.toString().orEmpty()
+                if (teacherGrade.isBlank()) {
+                    binding.etGradeLevel.setText(SchoolStructure.defaultGradeLevelForRole("teacher"), false)
+                }
             } else {
-                binding.sectionGroup.visibility = View.VISIBLE
                 binding.tilStudentNumber.visibility = View.VISIBLE
+                binding.tilSection.visibility = View.VISIBLE
+                binding.tvSectionHelper.text = "Students must choose their grade and section. Teachers choose the grade they handle."
+                val selectedGrade = binding.etGradeLevel.text?.toString().orEmpty()
+                val studentGrade = selectedGrade.ifBlank { SchoolStructure.defaultGradeLevelForRole("student") }
+                binding.etGradeLevel.setText(studentGrade, false)
+                setupSectionDropdown(studentGrade)
             }
         }
 
         binding.btnRegister.setOnClickListener { handleRegister() }
         binding.tvGoToLogin.setOnClickListener { finish() }
+    }
+
+    private fun setupGradeDropdown() {
+        val grades = SchoolStructure.gradeLevels
+        binding.etGradeLevel.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, grades)
+        )
+        binding.etGradeLevel.setText(SchoolStructure.defaultGradeLevelForRole("student"), false)
+        binding.etGradeLevel.setOnItemClickListener { _, _, position, _ ->
+            val selectedGrade = grades.getOrNull(position).orEmpty()
+            binding.tilGradeLevel.error = null
+            if (binding.rbStudent.isChecked) {
+                setupSectionDropdown(selectedGrade)
+            }
+        }
+    }
+
+    private fun setupSectionDropdown(gradeLevel: String) {
+        val sections = sectionRecords
+            .filter { it.gradeLevel.equals(gradeLevel, ignoreCase = true) }
+            .map { it.name }
+            .ifEmpty { SchoolStructure.sectionsForGrade(gradeLevel) }
+        binding.etSection.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, sections)
+        )
+        binding.etSection.setText("", false)
+        binding.tilSection.error = null
+    }
+
+    private fun loadSectionMasterData() {
+        dbService.getAllSections { sections ->
+            runOnUiThread {
+                sectionRecords = sections
+                setupSectionDropdown(
+                    binding.etGradeLevel.text?.toString().orEmpty()
+                        .ifBlank { SchoolStructure.defaultGradeLevelForRole("student") }
+                )
+            }
+        }
     }
 
     private fun handleRegister() {
@@ -48,13 +105,11 @@ class RegisterActivity : AppCompatActivity() {
         val isTeacher = binding.rbTeacher.isChecked
         val role = if (isTeacher) "teacher" else "student"
         val studentNumber = if (!isTeacher) binding.etStudentNumber.text.toString().trim() else ""
-        val gradeLevel = if (isTeacher) "" else "Grade 3"
-
-        val section = when {
-            !isTeacher && binding.rbSantan.isChecked -> "Santan"
-            !isTeacher && binding.rbDaisy.isChecked -> "Daisy"
-            !isTeacher && binding.rbOrchid.isChecked -> "Orchid"
-            else -> ""
+        val gradeLevel = SchoolStructure.normalizeGradeLevel(binding.etGradeLevel.text.toString())
+        val section = if (isTeacher) {
+            ""
+        } else {
+            SchoolStructure.normalizeSectionName(binding.etSection.text.toString())
         }
 
         var hasError = false
@@ -103,11 +158,21 @@ class RegisterActivity : AppCompatActivity() {
             binding.tilConfirmPassword.error = null
         }
 
-        if (!isTeacher && section.isEmpty()) {
-            binding.tvSectionError.visibility = View.VISIBLE
+        if (gradeLevel.isEmpty()) {
+            binding.tilGradeLevel.error = "Grade level is required"
             hasError = true
         } else {
-            binding.tvSectionError.visibility = View.GONE
+            binding.tilGradeLevel.error = null
+        }
+
+        if (!isTeacher && section.isEmpty()) {
+            binding.tilSection.error = "Section is required"
+            hasError = true
+        } else if (!isTeacher && section !in SchoolStructure.sectionsForGrade(gradeLevel)) {
+            binding.tilSection.error = "Choose a valid section for $gradeLevel"
+            hasError = true
+        } else {
+            binding.tilSection.error = null
         }
 
         if (hasError) return

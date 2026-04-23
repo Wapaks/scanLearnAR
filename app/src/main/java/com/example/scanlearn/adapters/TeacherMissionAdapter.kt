@@ -29,8 +29,23 @@ class TeacherMissionAdapter(
         holder.binding.tvTitle.text = mission.title
         holder.binding.tvDescription.text = mission.description
         holder.binding.tvCategory.text = mission.category.replaceFirstChar { it.uppercase() }
-        holder.binding.tvSections.text =
-            if (mission.sectionIds.isEmpty()) "All sections" else mission.sectionIds.joinToString(", ")
+        holder.binding.tvCurriculum.text = when {
+            mission.lessonIds.isNotEmpty() ->
+                "${formatQuarterLabel(mission.quarterId)} | ${mission.lessonIds.size} lesson link(s)"
+            mission.quarterId.isNotBlank() -> formatQuarterLabel(mission.quarterId)
+            else -> "No curriculum link yet"
+        }
+        val targetSections = if (mission.sectionIds.isEmpty()) {
+            "All sections"
+        } else {
+            mission.sectionIds.joinToString(", ")
+        }
+        val releasedSections = if (mission.releasedSectionIds.isEmpty()) {
+            "Not released yet"
+        } else {
+            mission.releasedSectionIds.joinToString(", ")
+        }
+        holder.binding.tvSections.text = "Targets: $targetSections | Released: $releasedSections"
         holder.binding.tvObjects.text = "${mission.objectsToFind.size} object(s) linked"
         holder.binding.tvStatus.text = if (mission.active) "Active" else "Archived"
         holder.binding.btnEdit.setOnClickListener { onEdit(mission) }
@@ -39,4 +54,13 @@ class TeacherMissionAdapter(
     }
 
     override fun getItemCount(): Int = missions.size
+
+    private fun formatQuarterLabel(quarterId: String): String {
+        val match = Regex("q(\\d+)", RegexOption.IGNORE_CASE).find(quarterId)
+        return if (match != null) {
+            "Quarter ${match.groupValues[1]}"
+        } else {
+            quarterId.ifBlank { "Quarter not linked" }
+        }
+    }
 }

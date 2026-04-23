@@ -1,6 +1,7 @@
 package com.example.scanlearn.services
 
 import com.example.scanlearn.models.User
+import com.example.scanlearn.utils.SchoolStructure
 import com.google.firebase.auth.FirebaseAuth
 
 class FirebaseAuthService {
@@ -18,6 +19,8 @@ class FirebaseAuthService {
         onSuccess: (User) -> Unit,
         onError: (String) -> Unit
     ) {
+        val normalizedGradeLevel = SchoolStructure.resolveGradeLevel(gradeLevel, role)
+        val normalizedSection = SchoolStructure.resolveSectionName(section)
         if (role == "teacher" && !email.endsWith("@neu.edu.ph")) {
             onError("Teacher accounts must use a @neu.edu.ph email address.")
             return
@@ -35,8 +38,9 @@ class FirebaseAuthService {
                     email = email,
                     studentNumber = studentNumber,
                     role = role,
-                    section = section,
-                    gradeLevel = gradeLevel
+                    section = normalizedSection,
+                    sectionId = normalizedSection,
+                    gradeLevel = normalizedGradeLevel
                 )
                 onSuccess(user)
             }
@@ -59,14 +63,21 @@ class FirebaseAuthService {
                     return@addOnSuccessListener
                 }
                 val role = if (email.endsWith("@neu.edu.ph")) "teacher" else "student"
+                val normalizedSection = SchoolStructure.resolveSectionName(
+                    cachedUser?.section.orEmpty().ifBlank { cachedUser?.sectionId.orEmpty() }
+                )
                 val user = User(
                     id = uid,
                     name = cachedUser?.name ?: email.substringBefore("@"),
                     email = email,
                     studentNumber = cachedUser?.studentNumber ?: "",
                     role = role,
-                    section = cachedUser?.section ?: "",
-                    gradeLevel = cachedUser?.gradeLevel ?: if (role == "student") "Grade 3" else ""
+                    section = normalizedSection,
+                    sectionId = normalizedSection.ifBlank { cachedUser?.sectionId.orEmpty() },
+                    gradeLevel = SchoolStructure.resolveGradeLevel(
+                        cachedUser?.gradeLevel.orEmpty(),
+                        role
+                    )
                 )
                 onSuccess(user)
             }

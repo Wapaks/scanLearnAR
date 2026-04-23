@@ -86,6 +86,10 @@
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
+        <activity android:name=".activities.MissionDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
         <activity android:name=".activities.ProgressActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
@@ -99,6 +103,10 @@
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
         <activity android:name=".activities.LessonStudioActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.TeacherReviewQueueActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
@@ -119,6 +127,10 @@
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 
         <activity android:name=".activities.TeacherStudentsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
+
+        <activity android:name=".activities.TeacherSectionsActivity"
             android:exported="false"
             android:theme="@style/Theme.ScanLearnAR.NoActionBar"/>
 

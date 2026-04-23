@@ -6,6 +6,7 @@ import com.example.scanlearn.models.Mission
 import com.example.scanlearn.models.ScannedObject
 import com.example.scanlearn.models.Submission
 import com.example.scanlearn.models.User
+import com.example.scanlearn.utils.SchoolStructure
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.example.scanlearn.models.*
@@ -18,12 +19,12 @@ class StorageService(context: Context) {
 
     // ─── User ───────────────────────────────────────────────
     fun saveUser(user: User) {
-        prefs.edit().putString("current_user", gson.toJson(user)).apply()
+        prefs.edit().putString("current_user", gson.toJson(normalizeUser(user))).apply()
     }
 
     fun getUser(): User? {
         val json = prefs.getString("current_user", null) ?: return null
-        return gson.fromJson(json, User::class.java)
+        return gson.fromJson(json, User::class.java)?.let(::normalizeUser)
     }
 
     fun clearUser() {
@@ -33,7 +34,7 @@ class StorageService(context: Context) {
     // ─── Registered Users ───────────────────────────────────
     fun saveRegisteredUser(user: User, password: String) {
         val users = getRegisteredUsers().toMutableMap()
-        users[user.email] = Pair(user, password)
+        users[user.email] = Pair(normalizeUser(user), password)
         prefs.edit().putString("registered_users", gson.toJson(users)).apply()
     }
 
@@ -53,6 +54,15 @@ class StorageService(context: Context) {
         val json = prefs.getString("registered_users", null) ?: return emptyMap()
         val type = object : TypeToken<Map<String, Any>>() {}.type
         return gson.fromJson(json, type)
+    }
+
+    private fun normalizeUser(user: User): User {
+        val normalizedSection = SchoolStructure.resolveSectionName(user.section.ifBlank { user.sectionId })
+        return user.copy(
+            gradeLevel = SchoolStructure.resolveGradeLevel(user.gradeLevel, user.role),
+            section = normalizedSection,
+            sectionId = normalizedSection.ifBlank { user.sectionId }
+        )
     }
 
     // ─── Submissions ─────────────────────────────────────────

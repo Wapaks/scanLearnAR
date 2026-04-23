@@ -49,7 +49,7 @@
                 android:id="@+id/tvStudentSection"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Santan"
+                android:text="Section"
                 android:textSize="12sp"
                 android:textColor="?attr/colorPrimary"
                 android:textStyle="bold"
@@ -72,7 +72,7 @@
                 android:gravity="center">
 
                 <TextView
-                    android:id="@+id/tvScannedCount"
+                    android:id="@+id/tvLessonsCompleted"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
@@ -83,7 +83,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Scanned"
+                    android:text="Lessons"
                     android:textSize="11sp"
                     android:textColor="#888888" />
 
@@ -102,7 +102,7 @@
                 android:gravity="center">
 
                 <TextView
-                    android:id="@+id/tvSubmissionsCount"
+                    android:id="@+id/tvTasksCompleted"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
@@ -113,7 +113,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Submissions"
+                    android:text="Tasks Done"
                     android:textSize="11sp"
                     android:textColor="#888888" />
 
@@ -160,7 +160,7 @@
                 android:gravity="center">
 
                 <TextView
-                    android:id="@+id/tvManualCorrections"
+                    android:id="@+id/tvMasteryCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
@@ -171,7 +171,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Manual Fixes"
+                    android:text="Mastered"
                     android:textSize="11sp"
                     android:textColor="#888888" />
 
@@ -185,7 +185,7 @@
                 android:gravity="center">
 
                 <TextView
-                    android:id="@+id/tvLowConfidence"
+                    android:id="@+id/tvStalledTasks"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
@@ -196,7 +196,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Low Conf"
+                    android:text="Tasks Stalled"
                     android:textSize="11sp"
                     android:textColor="#888888" />
 

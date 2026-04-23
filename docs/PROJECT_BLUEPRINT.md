@@ -30,6 +30,46 @@
 
 Based on the current progress, these are the best next actions to keep the project aligned and moving forward.
 
+## Locked School Structure
+
+The LMS now uses these fixed section groups as the school structure baseline.
+
+- Grade 1: `Kindness`, `Wisdom`, `Diligence`, `Honesty`, `Loyalty`
+- Grade 2: `Sampaguita`, `Rose`, `Orchid`, `Molave`, `Camia`
+- Grade 3: `Manga`, `Melon`, `Guyabano`, `Kasoy`, `Santol`
+- Grade 4: `Narra`, `Acacia`, `Molave`, `Yakal`, `Mahogany`
+- Grade 5: `Rizal`, `Tandang Sora`, `Lopez Jaena`, `Andres Bonifacio`, `Burgos`
+- Grade 6: `Garnet`, `Pearl`, `Diamond`, `Emerald`, `Ruby`
+
+Teacher accounts must be assigned to one grade level from Grade 1 to Grade 6.
+
+Student accounts must be assigned to both:
+
+- a grade level
+- a section within that grade level
+
+Teacher-facing dashboards, lessons, missions, and student lists should always be scoped to the teacher's assigned grade level.
+
+## Current Phase 1 Product Reset
+
+Before adding more enrichment features, the app should complete this LMS-first cleanup pass.
+
+### Phase 1 Scope
+
+- clean the student home
+- clean the teacher home
+- finalize grades, sections, and teacher scope
+- make lessons, tasks, and progress the main product
+
+### Phase 1 Product Rule
+
+During this phase:
+
+- the student dashboard should lead with learning plan, tasks, and progress
+- the teacher dashboard should lead with curriculum, students, tasks, and results
+- old prototype leftovers should be removed or visually deprioritized
+- scanning should remain available only as a supporting classroom feature, not the center of the product
+
 ### Things To Do Next
 
 - Build `Test Knowledge` mode so the student side fully matches the intended three-mode structure

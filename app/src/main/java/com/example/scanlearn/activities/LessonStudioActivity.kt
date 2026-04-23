@@ -9,11 +9,16 @@ import com.example.scanlearn.databinding.ActivityLessonStudioBinding
 import com.example.scanlearn.databinding.ItemLessonActivityEditorBinding
 import com.example.scanlearn.models.Lesson
 import com.example.scanlearn.models.LessonActivity
+import com.example.scanlearn.models.SectionRecord
 import com.example.scanlearn.repositories.LessonRepository
 import com.example.scanlearn.services.AiGovernanceService
-import com.example.scanlearn.services.GeminiTeacherCopilotService
+import com.example.scanlearn.services.RealtimeDbService
 import com.example.scanlearn.services.StorageService
+import com.example.scanlearn.services.TeacherCopilotDefaults
+import com.example.scanlearn.services.TeacherCopilotService
+import com.example.scanlearn.services.TeacherCopilotServiceFactory
 import com.example.scanlearn.utils.AppConstants
+import com.example.scanlearn.utils.SchoolStructure
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -23,12 +28,15 @@ class LessonStudioActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLessonStudioBinding
     private val lessonRepository = LessonRepository()
-    private val aiService = GeminiTeacherCopilotService()
+    private val aiService: TeacherCopilotService = TeacherCopilotServiceFactory.create()
     private val aiGovernanceService = AiGovernanceService()
+    private val dbService = RealtimeDbService()
     private lateinit var storageService: StorageService
     private lateinit var lesson: Lesson
     private val activityBindings = mutableListOf<ItemLessonActivityEditorBinding>()
     private var aiTouchedLesson = false
+    private val releaseCheckBoxes = mutableListOf<android.widget.CheckBox>()
+    private var sectionRecords: List<SectionRecord> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,9 +72,12 @@ class LessonStudioActivity : AppCompatActivity() {
                 return@getLesson
             }
             lesson = loadedLesson
-            lessonRepository.getActivitiesForLesson(lesson.id) { activities ->
-                runOnUiThread {
-                    bindLesson(activities)
+            dbService.getSectionsForGrade(lesson.gradeLevel) { sections ->
+                sectionRecords = sections
+                lessonRepository.getActivitiesForLesson(lesson.id) { activities ->
+                    runOnUiThread {
+                        bindLesson(activities)
+                    }
                 }
             }
         }
@@ -78,6 +89,7 @@ class LessonStudioActivity : AppCompatActivity() {
         binding.etObjective.setText(lesson.objective)
         binding.etSummary.setText(lesson.summary)
         binding.tvStatus.text = "Status: ${lesson.status.replaceFirstChar { it.uppercase() }}"
+        renderReleaseSectionOptions(lesson.releasedSectionIds)
         binding.activityContainer.removeAllViews()
         activityBindings.clear()
         binding.tvAiStatus.text = "Use Gemini to draft, simplify, or generate activities, then review before publishing."
@@ -87,6 +99,23 @@ class LessonStudioActivity : AppCompatActivity() {
         } else {
             activities.sortedBy { it.orderIndex }.forEach { addActivityRow(it) }
         }
+    }
+
+    private fun renderReleaseSectionOptions(selectedSections: List<String>) {
+        binding.releaseSectionsContainer.removeAllViews()
+        releaseCheckBoxes.clear()
+        sectionRecords.map { it.name }
+            .ifEmpty { SchoolStructure.sectionsForGrade(lesson.gradeLevel) }
+            .forEach { sectionName ->
+            val checkBox = android.widget.CheckBox(this).apply {
+                text = sectionName
+                isChecked = selectedSections.any { it.equals(sectionName, ignoreCase = true) }
+                setOnCheckedChangeListener { _, _ -> updateReleaseHint() }
+            }
+            binding.releaseSectionsContainer.addView(checkBox)
+            releaseCheckBoxes.add(checkBox)
+        }
+        updateReleaseHint()
     }
 
     private fun addActivityRow(activity: LessonActivity? = null) {
@@ -127,9 +156,16 @@ class LessonStudioActivity : AppCompatActivity() {
         val updatedTitle = binding.etTitle.text.toString().trim()
         val updatedObjective = binding.etObjective.text.toString().trim()
         val updatedSummary = binding.etSummary.text.toString().trim()
+        val releasedSectionIds = releaseCheckBoxes
+            .filter { it.isChecked }
+            .map { it.text.toString() }
 
         if (updatedTitle.isBlank() || updatedObjective.isBlank() || updatedSummary.isBlank()) {
             Toast.makeText(this, "Fill in the lesson title, objective, and summary.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (status == "published" && releasedSectionIds.isEmpty()) {
+            Toast.makeText(this, "Choose at least one section before publishing.", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -187,9 +223,10 @@ class LessonStudioActivity : AppCompatActivity() {
             summary = updatedSummary,
             activityIds = activities.map { it.id },
             status = status,
+            releasedSectionIds = releasedSectionIds,
             aiGenerated = lesson.aiGenerated || aiTouchedLesson,
-            aiSource = if (lesson.aiGenerated || aiTouchedLesson) GeminiTeacherCopilotService.DEFAULT_MODEL else lesson.aiSource,
-            aiPromptVersion = if (lesson.aiGenerated || aiTouchedLesson) GeminiTeacherCopilotService.PROMPT_VERSION else lesson.aiPromptVersion,
+            aiSource = if (lesson.aiGenerated || aiTouchedLesson) TeacherCopilotDefaults.DEFAULT_MODEL else lesson.aiSource,
+            aiPromptVersion = if (lesson.aiGenerated || aiTouchedLesson) TeacherCopilotDefaults.PROMPT_VERSION else lesson.aiPromptVersion,
             updatedAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(Date())
         )
 
@@ -216,9 +253,24 @@ class LessonStudioActivity : AppCompatActivity() {
                     lesson = updatedLesson
                     binding.tvStatus.text = "Status: ${status.replaceFirstChar { it.uppercase() }}"
                     aiTouchedLesson = false
-                    Toast.makeText(this, "Lesson updated.", Toast.LENGTH_SHORT).show()
+                    updateReleaseHint()
+                    val releaseMessage = if (updatedLesson.releasedSectionIds.isEmpty()) {
+                        "Lesson updated."
+                    } else {
+                        "Lesson updated for ${updatedLesson.releasedSectionIds.joinToString(", ")}."
+                    }
+                    Toast.makeText(this, releaseMessage, Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    private fun updateReleaseHint() {
+        val selectedSections = releaseCheckBoxes.filter { it.isChecked }.map { it.text.toString() }
+        binding.tvReleaseHint.text = if (selectedSections.isEmpty()) {
+            "Published lessons only appear for the sections released here."
+        } else {
+            "This lesson will appear for ${selectedSections.size} section(s): ${selectedSections.joinToString(", ")}."
         }
     }
 
@@ -234,7 +286,7 @@ class LessonStudioActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val draft = aiService.generateLessonDraft(
-                    gradeLevel = lesson.gradeLevel.ifBlank { "Grade 3" },
+                    gradeLevel = lesson.gradeLevel.ifBlank { currentTeacherGrade() },
                     quarterTitle = lesson.quarterId,
                     unitTitle = binding.tvLessonLabel.text.toString(),
                     lessonTitleHint = binding.etTitle.text?.toString().orEmpty().ifBlank { lesson.title },
@@ -250,8 +302,8 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "lesson_draft",
                     generatedText = draft.rawText,
                     createdBy = currentUser?.id.orEmpty(),
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION
                 )
                 aiGovernanceService.logUsage(
                     userId = currentUser?.id.orEmpty(),
@@ -259,8 +311,8 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "lesson_draft",
                     targetType = "lesson",
                     targetId = lesson.id,
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION,
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION,
                     status = "success"
                 )
                 binding.tvAiStatus.text = "Gemini drafted a lesson suggestion. Review it before saving."
@@ -271,8 +323,8 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "lesson_draft",
                     targetType = "lesson",
                     targetId = lesson.id,
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION,
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION,
                     status = "failed",
                     errorMessage = e.message.orEmpty()
                 )
@@ -287,7 +339,7 @@ class LessonStudioActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val draft = aiService.simplifyLesson(
-                    gradeLevel = lesson.gradeLevel.ifBlank { "Grade 3" },
+                    gradeLevel = lesson.gradeLevel.ifBlank { currentTeacherGrade() },
                     title = binding.etTitle.text?.toString().orEmpty().ifBlank { lesson.title },
                     objective = binding.etObjective.text?.toString().orEmpty().ifBlank { lesson.objective },
                     summary = binding.etSummary.text?.toString().orEmpty().ifBlank { lesson.summary }
@@ -302,8 +354,8 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "lesson_simplify",
                     generatedText = draft.rawText,
                     createdBy = currentUser?.id.orEmpty(),
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION
                 )
                 aiGovernanceService.logUsage(
                     userId = currentUser?.id.orEmpty(),
@@ -311,8 +363,8 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "lesson_simplify",
                     targetType = "lesson",
                     targetId = lesson.id,
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION,
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION,
                     status = "success"
                 )
                 binding.tvAiStatus.text = "Gemini simplified the lesson text. Review it before saving."
@@ -323,8 +375,8 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "lesson_simplify",
                     targetType = "lesson",
                     targetId = lesson.id,
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION,
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION,
                     status = "failed",
                     errorMessage = e.message.orEmpty()
                 )
@@ -339,7 +391,7 @@ class LessonStudioActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val activities = aiService.generateQuizActivities(
-                    gradeLevel = lesson.gradeLevel.ifBlank { "Grade 3" },
+                    gradeLevel = lesson.gradeLevel.ifBlank { currentTeacherGrade() },
                     lessonTitle = binding.etTitle.text?.toString().orEmpty().ifBlank { lesson.title },
                     objective = binding.etObjective.text?.toString().orEmpty().ifBlank { lesson.objective },
                     summary = binding.etSummary.text?.toString().orEmpty().ifBlank { lesson.summary }
@@ -368,8 +420,8 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "quiz_generation",
                     generatedText = generatedText,
                     createdBy = currentUser?.id.orEmpty(),
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION
                 )
                 aiGovernanceService.logUsage(
                     userId = currentUser?.id.orEmpty(),
@@ -377,8 +429,8 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "quiz_generation",
                     targetType = "lesson",
                     targetId = lesson.id,
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION,
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION,
                     status = "success"
                 )
                 binding.tvAiStatus.text = "Gemini added ${activities.size} activity suggestions. Review them before saving."
@@ -389,13 +441,18 @@ class LessonStudioActivity : AppCompatActivity() {
                     feature = "quiz_generation",
                     targetType = "lesson",
                     targetId = lesson.id,
-                    modelName = GeminiTeacherCopilotService.DEFAULT_MODEL,
-                    promptVersion = GeminiTeacherCopilotService.PROMPT_VERSION,
+                    modelName = TeacherCopilotDefaults.DEFAULT_MODEL,
+                    promptVersion = TeacherCopilotDefaults.PROMPT_VERSION,
                     status = "failed",
                     errorMessage = e.message.orEmpty()
                 )
                 binding.tvAiStatus.text = "Gemini quiz generation failed: ${e.message ?: "unknown error"}"
             }
         }
+    }
+
+    private fun currentTeacherGrade(): String {
+        return SchoolStructure.normalizeGradeLevel(storageService.getUser()?.gradeLevel.orEmpty())
+            .ifBlank { SchoolStructure.defaultGradeLevelForRole("teacher") }
     }
 }

@@ -22,7 +22,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Scan &amp; Learn AR"
+                android:text="ScanLearn"
                 android:textColor="@android:color/white"
                 android:textSize="28sp"
                 android:textStyle="bold" />
@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Interactive Object Learning"
+                android:text="Elementary Learning Management System"
                 android:textColor="#CCFFFFFF"
                 android:textSize="14sp" />
 
@@ -77,9 +77,10 @@
                         android:padding="20dp">
 
                         <TextView
+                            android:id="@+id/tvStudentScope"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Grade 3 Pilot"
+                            android:text="Student LMS"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
 
@@ -102,6 +103,34 @@
                             android:textColor="@color/text_secondary"
                             android:textSize="14sp" />
 
+                        <TextView
+                            android:id="@+id/tvNextLessonValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="Next lesson will appear here."
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTaskSnapshot"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Teacher tasks for your section will appear here."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvRecentProgress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Recent progress will appear here."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnLearningPlan"
                             android:layout_width="match_parent"
@@ -118,7 +147,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:backgroundTint="@color/explorer"
-                    android:text="Explorer Mode"
+                    android:text="Open Lessons"
                     android:textSize="16sp"
                     app:cornerRadius="12dp" />
 
@@ -128,7 +157,7 @@
                     android:layout_marginTop="6dp"
                     android:layout_marginBottom="20dp"
                     android:gravity="center"
-                    android:text="Scan any object and learn at your own pace"
+                    android:text="Go to the active quarter hub and continue your learning path."
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -137,7 +166,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:backgroundTint="@color/mission"
-                    android:text="Mission Mode"
+                    android:text="Tasks From Teacher"
                     android:textSize="16sp"
                     app:cornerRadius="12dp" />
 
@@ -147,7 +176,7 @@
                     android:layout_marginTop="6dp"
                     android:layout_marginBottom="20dp"
                     android:gravity="center"
-                    android:text="Complete specific learning objectives"
+                    android:text="See the assignments and mission tasks released for your section."
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -156,7 +185,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:backgroundTint="@color/challenge"
-                    android:text="Test Knowledge"
+                    android:text="Practice And Check"
                     android:textSize="16sp"
                     app:cornerRadius="12dp" />
 
@@ -166,7 +195,7 @@
                     android:layout_marginTop="6dp"
                     android:layout_marginBottom="32dp"
                     android:gravity="center"
-                    android:text="Review lesson quizzes without using the scanner"
+                    android:text="Review your lessons and take quizzes without using the scanner."
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 

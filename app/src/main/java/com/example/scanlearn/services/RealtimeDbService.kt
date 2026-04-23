@@ -13,16 +13,19 @@ import com.example.scanlearn.models.Lesson
 import com.example.scanlearn.models.LessonActivity
 import com.example.scanlearn.models.MasteryRecord
 import com.example.scanlearn.models.Mission
+import com.example.scanlearn.models.MissionAnalytics
 import com.example.scanlearn.models.QuizAttempt
 import com.example.scanlearn.models.Quarter
 import com.example.scanlearn.models.ScanAttempt
 import com.example.scanlearn.models.ScannedObject
+import com.example.scanlearn.models.SectionRecord
 import com.example.scanlearn.models.StudentLessonProgress
 import com.example.scanlearn.models.StudentMissionProgress
 import com.example.scanlearn.models.StudentProgress
 import com.example.scanlearn.models.Submission
 import com.example.scanlearn.models.Unit as CurriculumUnit
 import com.example.scanlearn.models.User
+import com.example.scanlearn.utils.SchoolStructure
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -36,14 +39,30 @@ class RealtimeDbService {
     private val db = FirebaseDatabase.getInstance().reference
 
     fun saveUser(user: User, onComplete: (Boolean) -> Unit = {}) {
-        db.child("users").child(user.id).setValue(user)
+        val normalizedSection = normalizeSectionName(user.section.ifBlank { user.sectionId })
+        val normalizedUser = user.copy(
+            gradeLevel = SchoolStructure.resolveGradeLevel(user.gradeLevel, user.role),
+            section = normalizedSection,
+            sectionId = normalizedSection.ifBlank { user.sectionId }
+        )
+        db.child("users").child(user.id).setValue(normalizedUser)
             .addOnSuccessListener { onComplete(true) }
             .addOnFailureListener { onComplete(false) }
     }
 
     fun getUser(uid: String, onResult: (User?) -> Unit) {
         db.child("users").child(uid).get()
-            .addOnSuccessListener { snap -> onResult(snap.getValue(User::class.java)) }
+            .addOnSuccessListener { snap ->
+                val user = snap.getValue(User::class.java)
+                val normalizedSection = normalizeSectionName(user?.section.orEmpty().ifBlank { user?.sectionId.orEmpty() })
+                onResult(
+                    user?.copy(
+                        section = normalizedSection,
+                        sectionId = normalizedSection.ifBlank { user.sectionId },
+                        gradeLevel = SchoolStructure.resolveGradeLevel(user.gradeLevel, user.role)
+                    )
+                )
+            }
             .addOnFailureListener { onResult(null) }
     }
 
@@ -59,6 +78,36 @@ class RealtimeDbService {
 
                 override fun onCancelled(error: DatabaseError) { onResult(emptyList()) }
             })
+    }
+
+    fun seedSections(sections: List<SectionRecord>, onComplete: (Boolean) -> Unit = {}) {
+        val sectionMap = sections.associateBy { it.id }
+        db.child("sections").updateChildren(sectionMap)
+            .addOnSuccessListener { onComplete(true) }
+            .addOnFailureListener { onComplete(false) }
+    }
+
+    fun getAllSections(onResult: (List<SectionRecord>) -> Unit) {
+        db.child("sections")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    val sections = snap.children.mapNotNull { child ->
+                        child.getValue(SectionRecord::class.java)
+                    }.filter { it.active }
+                        .sortedWith(compareBy<SectionRecord> { it.gradeLevel }.thenBy { it.name })
+                    onResult(sections)
+                }
+
+                override fun onCancelled(error: DatabaseError) { onResult(emptyList()) }
+            })
+    }
+
+    fun getSectionsForGrade(gradeLevel: String, onResult: (List<SectionRecord>) -> Unit) {
+        getAllSections { sections ->
+            onResult(
+                sections.filter { it.gradeLevel.equals(gradeLevel, ignoreCase = true) }
+            )
+        }
     }
 
     fun getTeachers(onResult: (List<User>) -> Unit) {
@@ -313,7 +362,10 @@ class RealtimeDbService {
                                 (user.studentNumber.isNotBlank() || user.section.isNotBlank())
                             )
                     }.map { user ->
-                        user.copy(section = normalizeSectionName(user.section))
+                        user.copy(
+                            section = normalizeSectionName(user.section),
+                            gradeLevel = SchoolStructure.normalizeGradeLevel(user.gradeLevel).ifBlank { user.gradeLevel }
+                        )
                     }
                     onResult(students)
                 }
@@ -497,6 +549,17 @@ class RealtimeDbService {
             })
     }
 
+    fun getAllAiDraftVariants(onResult: (List<AiDraftVariant>) -> Unit) {
+        db.child("ai_draft_variants")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    onResult(snap.children.mapNotNull { it.getValue(AiDraftVariant::class.java) })
+                }
+
+                override fun onCancelled(error: DatabaseError) { onResult(emptyList()) }
+            })
+    }
+
     fun saveAiUsageLog(log: AiUsageLog, onComplete: (Boolean) -> Unit = {}) {
         val key = log.id.ifBlank { db.child("ai_usage_logs").push().key.orEmpty() }
         if (key.isBlank()) {
@@ -614,6 +677,43 @@ class RealtimeDbService {
             })
     }
 
+    fun getReleasedLessonsForUnit(
+        unitId: String,
+        section: String,
+        onResult: (List<Lesson>) -> Unit
+    ) {
+        getLessonsForUnit(unitId) { lessons ->
+            onResult(
+                lessons.filter { lesson ->
+                    lesson.status.equals("published", ignoreCase = true) &&
+                        lessonMatchesSectionRelease(lesson, section)
+                }
+            )
+        }
+    }
+
+    fun getReleasedLessonsForQuarter(
+        quarterId: String,
+        section: String,
+        onResult: (List<Lesson>) -> Unit
+    ) {
+        db.child("lessons")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    val lessons = snap.children.mapNotNull { it.getValue(Lesson::class.java) }
+                        .filter { lesson ->
+                            lesson.quarterId == quarterId &&
+                                lesson.status.equals("published", ignoreCase = true) &&
+                                lessonMatchesSectionRelease(lesson, section)
+                        }
+                        .sortedWith(compareBy<Lesson> { it.unitId }.thenBy { it.orderIndex })
+                    onResult(lessons)
+                }
+
+                override fun onCancelled(error: DatabaseError) { onResult(emptyList()) }
+            })
+    }
+
     fun saveLessonActivity(activity: LessonActivity, onComplete: (Boolean) -> Unit = {}) {
         db.child("activities").child(activity.id).setValue(activity)
             .addOnSuccessListener { onComplete(true) }
@@ -717,6 +817,29 @@ class RealtimeDbService {
             })
     }
 
+    fun getAllStudentLessonProgressMaps(
+        onResult: (Map<String, Map<String, StudentLessonProgress>>) -> Unit
+    ) {
+        db.child("student_lesson_progress")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    val result = mutableMapOf<String, Map<String, StudentLessonProgress>>()
+                    snap.children.forEach { studentSnap ->
+                        val studentId = studentSnap.key ?: return@forEach
+                        val progressMap = mutableMapOf<String, StudentLessonProgress>()
+                        studentSnap.children.forEach { lessonSnap ->
+                            val progress = lessonSnap.getValue(StudentLessonProgress::class.java) ?: return@forEach
+                            progressMap[lessonSnap.key ?: progress.lessonId] = progress
+                        }
+                        result[studentId] = progressMap
+                    }
+                    onResult(result)
+                }
+
+                override fun onCancelled(error: DatabaseError) { onResult(emptyMap()) }
+            })
+    }
+
     fun saveMasteryRecord(
         studentId: String,
         competencyId: String,
@@ -751,6 +874,29 @@ class RealtimeDbService {
                         map[competencySnap.key ?: record.competencyId] = record
                     }
                     onResult(map)
+                }
+
+                override fun onCancelled(error: DatabaseError) { onResult(emptyMap()) }
+            })
+    }
+
+    fun getAllMasteryRecords(
+        onResult: (Map<String, Map<String, MasteryRecord>>) -> Unit
+    ) {
+        db.child("mastery_records")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    val result = mutableMapOf<String, Map<String, MasteryRecord>>()
+                    snap.children.forEach { studentSnap ->
+                        val studentId = studentSnap.key ?: return@forEach
+                        val masteryMap = mutableMapOf<String, MasteryRecord>()
+                        studentSnap.children.forEach { competencySnap ->
+                            val record = competencySnap.getValue(MasteryRecord::class.java) ?: return@forEach
+                            masteryMap[competencySnap.key ?: record.competencyId] = record
+                        }
+                        result[studentId] = masteryMap
+                    }
+                    onResult(result)
                 }
 
                 override fun onCancelled(error: DatabaseError) { onResult(emptyMap()) }
@@ -807,6 +953,13 @@ class RealtimeDbService {
             .addOnFailureListener { onComplete(false) }
     }
 
+    fun seedMissions(missions: List<Mission>, onComplete: (Boolean) -> Unit = {}) {
+        val missionMap = missions.associateBy { it.id }
+        db.child("missions").updateChildren(missionMap)
+            .addOnSuccessListener { onComplete(true) }
+            .addOnFailureListener { onComplete(false) }
+    }
+
     fun getAllMissions(onResult: (List<Mission>) -> Unit) {
         db.child("missions")
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -819,21 +972,62 @@ class RealtimeDbService {
     }
 
     fun getMissionsForSection(section: String, onResult: (List<Mission>) -> Unit) {
+        getMissionsForStudent(section = section, gradeLevel = "", quarterId = "", lessonId = "", onResult = onResult)
+    }
+
+    fun getMissionsForStudent(
+        section: String,
+        gradeLevel: String,
+        quarterId: String = "",
+        lessonId: String = "",
+        onResult: (List<Mission>) -> Unit
+    ) {
         db.child("missions")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snap: DataSnapshot) {
                     val missions = snap.children.mapNotNull { it.getValue(Mission::class.java) }
                         .filter { mission ->
-                            mission.active && (
-                                mission.sectionIds.isEmpty() ||
-                                    mission.sectionIds.any { it.equals(section, ignoreCase = true) }
-                                )
+                            mission.active &&
+                                missionMatchesSectionRelease(mission, section) &&
+                                missionMatchesGrade(mission, gradeLevel) &&
+                                missionMatchesQuarter(mission, quarterId) &&
+                                missionMatchesLesson(mission, lessonId)
                         }
                     onResult(missions)
                 }
 
                 override fun onCancelled(error: DatabaseError) { onResult(emptyList()) }
             })
+    }
+
+    fun getMissionsForQuarter(
+        quarterId: String,
+        section: String,
+        gradeLevel: String,
+        onResult: (List<Mission>) -> Unit
+    ) {
+        getMissionsForStudent(
+            section = section,
+            gradeLevel = gradeLevel,
+            quarterId = quarterId,
+            onResult = onResult
+        )
+    }
+
+    fun getMissionsForLesson(
+        lessonId: String,
+        section: String,
+        gradeLevel: String,
+        quarterId: String = "",
+        onResult: (List<Mission>) -> Unit
+    ) {
+        getMissionsForStudent(
+            section = section,
+            gradeLevel = gradeLevel,
+            quarterId = quarterId,
+            lessonId = lessonId,
+            onResult = onResult
+        )
     }
 
     fun getMission(missionId: String, onResult: (Mission?) -> Unit) {
@@ -855,6 +1049,39 @@ class RealtimeDbService {
                         map[missionSnap.key ?: progress.missionId] = progress
                     }
                     onResult(map)
+                }
+
+                override fun onCancelled(error: DatabaseError) { onResult(emptyMap()) }
+            })
+    }
+
+    fun saveStudentMissionProgress(
+        studentId: String,
+        progress: StudentMissionProgress,
+        onComplete: (Boolean) -> Unit = {}
+    ) {
+        db.child("student_missions").child(studentId).child(progress.missionId).setValue(progress)
+            .addOnSuccessListener { onComplete(true) }
+            .addOnFailureListener { onComplete(false) }
+    }
+
+    fun getAllStudentMissionProgressMaps(
+        onResult: (Map<String, Map<String, StudentMissionProgress>>) -> Unit
+    ) {
+        db.child("student_missions")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    val result = mutableMapOf<String, Map<String, StudentMissionProgress>>()
+                    snap.children.forEach { studentSnap ->
+                        val studentId = studentSnap.key ?: return@forEach
+                        val missionMap = mutableMapOf<String, StudentMissionProgress>()
+                        studentSnap.children.forEach { missionSnap ->
+                            val progress = missionSnap.getValue(StudentMissionProgress::class.java) ?: return@forEach
+                            missionMap[missionSnap.key ?: progress.missionId] = progress
+                        }
+                        result[studentId] = missionMap
+                    }
+                    onResult(result)
                 }
 
                 override fun onCancelled(error: DatabaseError) { onResult(emptyMap()) }
@@ -961,13 +1188,45 @@ class RealtimeDbService {
     }
 
     private fun normalizeSectionName(section: String): String {
-        val cleaned = section.trim()
-        return when {
-            cleaned.equals("santan", ignoreCase = true) -> "Santan"
-            cleaned.equals("daisy", ignoreCase = true) -> "Daisy"
-            cleaned.equals("orchid", ignoreCase = true) -> "Orchid"
-            else -> cleaned
-        }
+        return SchoolStructure.normalizeSectionName(section)
+    }
+
+    private fun missionMatchesSection(mission: Mission, section: String): Boolean {
+        return mission.sectionIds.isEmpty() ||
+            mission.sectionIds.any { it.equals(section, ignoreCase = true) }
+    }
+
+    private fun missionMatchesSectionRelease(mission: Mission, section: String): Boolean {
+        return missionMatchesSection(mission, section) &&
+            (
+                section.isBlank() ||
+                    mission.releasedSectionIds.isEmpty() ||
+                    mission.releasedSectionIds.any { it.equals(section, ignoreCase = true) }
+                )
+    }
+
+    private fun missionMatchesGrade(mission: Mission, gradeLevel: String): Boolean {
+        return gradeLevel.isBlank() ||
+            mission.gradeLevel.isBlank() ||
+            mission.gradeLevel.equals(gradeLevel, ignoreCase = true)
+    }
+
+    private fun missionMatchesQuarter(mission: Mission, quarterId: String): Boolean {
+        return quarterId.isBlank() ||
+            mission.quarterId.isBlank() ||
+            mission.quarterId == quarterId
+    }
+
+    private fun missionMatchesLesson(mission: Mission, lessonId: String): Boolean {
+        return lessonId.isBlank() ||
+            mission.lessonIds.isEmpty() ||
+            mission.lessonIds.contains(lessonId)
+    }
+
+    private fun lessonMatchesSectionRelease(lesson: Lesson, section: String): Boolean {
+        return section.isBlank() ||
+            lesson.releasedSectionIds.isEmpty() ||
+            lesson.releasedSectionIds.any { it.equals(section, ignoreCase = true) }
     }
 
     fun buildLearningObjectAnalytics(
@@ -1005,6 +1264,40 @@ class RealtimeDbService {
                 recentLearners = objectSubmissions.map { it.studentId }.distinct().size
             )
         }
+    }
+
+    fun buildMissionAnalytics(
+        missions: List<Mission>,
+        missionProgressMaps: Map<String, Map<String, StudentMissionProgress>>
+    ): List<MissionAnalytics> {
+        return missions
+            .filter { it.active }
+            .map { mission ->
+                val relevantProgress = missionProgressMaps.values.mapNotNull { it[mission.id] }
+                val assignedLearners = relevantProgress.size
+                val completedLearners = relevantProgress.count { it.completed }
+                val stuckLearners = relevantProgress.count { !it.completed && it.progressPercent in 1..74 }
+                val completionPercent = if (assignedLearners == 0) {
+                    0
+                } else {
+                    (completedLearners * 100) / assignedLearners
+                }
+                MissionAnalytics(
+                    missionId = mission.id,
+                    title = mission.title,
+                    quarterId = mission.quarterId,
+                    lessonIds = mission.lessonIds,
+                    assignedLearners = assignedLearners,
+                    completedLearners = completedLearners,
+                    stuckLearners = stuckLearners,
+                    completionPercent = completionPercent
+                )
+            }
+            .sortedWith(
+                compareByDescending<MissionAnalytics> { it.stuckLearners }
+                    .thenBy { it.completionPercent }
+                    .thenBy { it.title.lowercase() }
+            )
     }
 
     fun buildCategoryAnalytics(

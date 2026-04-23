@@ -1,199 +1,197 @@
 # ScanLearn Progress Update
 
-## Current App Status
+## Current Product Direction
 
-ScanLearn is already beyond the early prototype stage.
+ScanLearn is now firmly moving as a:
 
-The app now has a working student side, a working teacher side, Firebase-based data storage for core learning flows, and a newly added chat system with unread message tracking.
+`curriculum-first Grade 3 science LMS with teacher-managed AI support`
 
-The project is already usable as a guided learning app, but it is still in active development and not yet fully complete in all planned areas.
+The app is no longer being shaped as a scan-first prototype. Scanning is now treated as enrichment and mission support inside a larger learning cycle:
 
-## What Is Already Working
+`My Learning Plan -> Quarter Hub -> Unit -> Lesson -> Assessment -> Mastery -> Teacher Intervention`
 
-### Authentication And Role Routing
+This is still aligned with the ScanLearn AI roadmap and the DepEd-based scaling direction.
 
-The app already supports:
+## Current Build Status
 
-- user registration
-- login
-- role-based routing
-- student and teacher account separation
+The Grade 3 pilot backbone is now in place.
 
-Students are sent to the student home screen.
+Completed major phases:
 
-Teachers are sent to the teacher dashboard.
+- Phase 1A: LMS data model, Firebase schema support, repositories
+- Phase 1B: Grade 3 Quarter 1 pilot seeding
+- Phase 2A: My Learning Plan and Quarter Hub
+- Phase 2B: Unit Detail, Lesson Player, Test Knowledge
+- Phase 3: Teacher curriculum dashboard and Lesson Studio
+- Phase 4: Gemini teacher copilot
+- Phase 4.5: AI governance, draft logging, usage logging
+- Phase 5: Review Queue and section/class curriculum dashboard
+- Phase 6: mission-to-curriculum alignment
+- Phase 6.5: mission analytics and teacher intervention loop
+- Pilot stabilization: lesson release control, mission release control, runtime guards, legacy scan-first cleanup
 
-## Student Side Progress
+## Grade 3 Curriculum Status
 
-The student side already includes:
+### Quarter 1
 
-- Home screen
-- Explorer Mode
-- Mission Mode access
-- Challenge Mode access
-- Progress screen
-- Scanner flow
-- Recognition result screen
-- Manual object selection
-- Object lesson screen
-- Quiz flow
-- Result flow
+Quarter 1 is seeded and supports the current pilot learning cycle.
 
-This means the basic student learning loop is already implemented.
+### Quarter 2
 
-## Teacher Side Progress
+Quarter 2 is now seeded in the app and connected to teacher tools.
 
-The teacher side already includes:
+Quarter 2 includes:
 
-- Teacher dashboard
-- Object management
-- Mission management
-- Student monitoring
-- Analytics access
+- quarter: `Rocks, Soil, and Materials Around Us`
+- 2 units
+- 4 lessons
+- 4 competencies
+- 8 lesson activities
+- 3 curriculum-linked draft missions
 
-Teachers can already create and manage learning content and review student-related data.
+Quarter 2 content is still controlled through teacher release decisions.
 
-## Learning Flow Progress
+That means:
 
-The app already supports the important confirmation-based learning flow:
+- the data is already in Firebase seed logic
+- lessons are reviewable in teacher curriculum tools
+- missions are filterable in teacher mission tools
+- release still happens lesson by lesson or section by section
 
-1. Student scans an object.
-2. The app shows suggested matches.
-3. The student confirms the correct object.
-4. The lesson opens.
-5. The student answers a quiz.
-6. Results are saved.
+## Teacher Workflow Status
 
-This is a major improvement over blind auto-navigation because it protects the learning flow from wrong recognition.
+Teacher-side core tools are now working across the Grade 3 pilot:
 
-## Firebase Progress
+- Curriculum Dashboard
+- Lesson Studio
+- review / publish workflow
+- section-based lesson release control
+- mission editing with lesson-linked release checks
+- Review Queue
+- section curriculum snapshot
+- learner intervention actions
+- AI lesson/mission/quiz/analytics support
 
-Firebase Realtime Database is already being used for important app data.
+Recent teacher-side improvement:
 
-The app already stores or uses:
+- the Curriculum Dashboard is now quarter-aware instead of assuming Quarter 1 only
+- the Missions screen is now quarter-filterable
+- Quarter 2 is now practical to review and release from the teacher UI
 
-- users
-- objects
-- missions
-- student mission progress
-- scan attempts
-- quiz attempts
-- submissions
-- chat conversations
-- chat messages
+## Student Workflow Status
 
-This means the app is already using Firebase as a real source of truth for most important features.
+Student-side LMS flow is working:
 
-## Chat System Progress
+- My Learning Plan
+- Quarter Hub
+- Unit Detail
+- Lesson Player
+- Test Knowledge
+- quarter-aware mission access
+- progress and mastery saving
 
-The chat system is now implemented.
+Release-gating is also in place:
 
-### What The Chat System Already Does
+- students only see lessons released to their section
+- students only see missions released to their section
+- stale direct opens are blocked in lesson and mission runtime flows
 
-- chat button appears on student and teacher home screens
-- students can message teachers
-- teachers can message students
-- teachers can message other teachers
-- students cannot message other students
-- chat is one-to-one only
-- chats persist in Firebase even after the app closes
-- inbox and conversation screens are working
-- unread message counts are tracked
-- the floating chat button can show unread counts like `Chat 1`
+## AI Status
 
-This is an important feature because it adds safe school communication while keeping the student restrictions in place.
+Teacher AI currently works through Firebase AI Logic and App Check.
 
-## UI And Device Behavior Progress
+Working teacher AI actions:
 
-The app has already been improved in these areas:
+- AI Draft
+- Simplify
+- AI Quiz
+- Generate Mission With AI
+- Generate AI Summary
 
-- floating chat button added
-- unread chat count added
-- documentation files added
-- system-bar handling was adjusted so screens better respect the status bar area
+Governance already exists for:
 
-This area may still need further testing on real devices, especially around status bar appearance and spacing, but progress has already been made.
+- AI draft variants
+- AI usage logs
+- AI-assisted metadata on lessons and missions
+- prompt version tracking
 
-## Documentation Progress
+## Gemini Backend Migration Status
 
-The docs folder now includes:
+A Gemini backend migration plan is now documented in:
 
-- `PROJECT_BLUEPRINT.md`
-- `app_overview.md`
-- `progress_update.md`
+- [GEMINI_BACKEND_MIGRATION_PLAN.md](</D:/games/ScanLearn/docs/GEMINI_BACKEND_MIGRATION_PLAN.md>)
 
-These files now help explain:
+Target direction:
 
-- the product direction
-- the whole app overview
-- the current development status
+`Android app -> backend AI gateway -> Gemini API (Google AI Studio)`
 
-## Major Features Already Completed
+Important note from this session:
 
-These major features are already done or mostly done:
+- Gemini should remain the provider
+- the Gemini API key should stay on the backend only
+- do not place the replacement key in the Android app
+- the backend cutover should happen feature by feature, starting with `AI Draft`
 
-- student and teacher authentication
-- role-based routing
-- scanner flow with confirmation
-- recognition result handling
-- manual object selection
-- lesson and quiz flow
-- mission storage in Firebase
-- teacher object management
-- teacher mission management
-- teacher analytics foundation
-- teacher student-detail insights
-- persistent chat system
-- unread chat badge support
+## DepEd Scaling Direction
 
-## Features Still In Progress Or Still Needed
+DepEd-based scaling documentation is now in place:
 
-Some planned parts are still incomplete or need more polishing.
+- [DEPED_CURRICULUM_SCALING_BLUEPRINT.md](</D:/games/ScanLearn/docs/DEPED_CURRICULUM_SCALING_BLUEPRINT.md>)
 
-These include:
+This confirms the scaling rule:
 
-- full mission assignment and tracking by section
-- category-aware scanning rules before model execution
-- stronger recognition provider integration
-- more refined student progress summaries
-- more advanced analytics polish
-- additional teacher workflow improvements
-- more real-device UI polish
+`DepEd standard -> quarter -> units -> lessons -> assessments -> scan enrichment`
 
-## Overall Assessment
+Current scope remains:
 
-Right now, the app is in a strong mid-development state.
+- Grade 3 first
+- complete 4 quarters well before scaling to the next grade
 
-It already has:
+## Current Priority Phase
 
-- a clear product direction
-- a working student experience
-- a working teacher experience
-- Firebase-backed learning records
-- teacher-managed content
-- safe teacher-student communication
+We are currently in:
 
-The foundation is already solid.
+`Pilot Stabilization and Rollout Readiness`
 
-The next phase is mostly about:
+Product reset note:
 
-- improving reliability
-- polishing workflows
-- improving recognition quality
-- finishing the remaining planned features
+- the app is now being cleaned up as an LMS-first product
+- student and teacher home flows should prioritize lessons, tasks, and progress
+- grade and section setup is expanding from the old Grade 3-only assumptions to a full Grade 1 to 6 school structure
+- teacher scope should be limited to the grade level they handle
 
-## Short Summary
+More specifically, the app is now at:
 
-In simple terms:
+`Quarter 2 teacher release setup and verification`
 
-ScanLearn is already functioning as a guided classroom learning app.
+This means we should avoid rushing into more features until Quarter 2 is released and validated through the teacher-to-student cycle.
 
-The main learning loop is working.
+## Recommended Next Step
 
-Teacher tools are working.
+The next practical step is:
 
-Chat is working.
+- review Quarter 2 lessons in Teacher Curriculum
+- publish and release them gradually
+- review Quarter 2 missions in Teacher Missions
+- activate only missions whose linked lessons are already released
+- validate the student experience for one pilot section
 
-Firebase persistence is working.
+After that, the next engineering step should be:
 
-The app now mainly needs refinement, expansion, and final completion of the remaining roadmap items.
+- keep the new app-side AI provider abstraction
+- keep Firebase AI as fallback
+- start backend gateway work for Gemini API via Google AI Studio
+
+## Short Session Summary
+
+Today’s progress moved the project forward in three important ways:
+
+1. Quarter 2 was made manageable in teacher tools, not just seeded in data.
+2. The project direction was reinforced using the DepEd curriculum structure for Grades 1 to 6.
+3. The next AI evolution was clarified: move to a backend Gemini gateway instead of putting provider keys in the mobile app.
+
+## End-of-Day State
+
+The project is on the right track.
+
+The Grade 3 pilot now has a real LMS backbone, teacher control, AI assistance, release gating, and a clear path for Quarter 2 rollout and safer future AI provider migration.

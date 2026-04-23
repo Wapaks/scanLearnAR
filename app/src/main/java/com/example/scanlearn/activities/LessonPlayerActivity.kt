@@ -60,7 +60,7 @@ class LessonPlayerActivity : AppCompatActivity() {
         binding.rvOptions.adapter = optionAdapter
         binding.btnBack.setOnClickListener { finish() }
         binding.btnNext.setOnClickListener { handleNext() }
-        binding.btnFinish.setOnClickListener { finish() }
+        binding.btnFinish.setOnClickListener { navigateAfterFinish() }
         binding.btnViewProgress.setOnClickListener {
             startActivity(Intent(this, ProgressActivity::class.java))
         }
@@ -81,6 +81,23 @@ class LessonPlayerActivity : AppCompatActivity() {
                 }
                 return@getLesson
             }
+            val currentUser = storage.getUser()
+            val section = currentUser?.section?.ifBlank { currentUser.sectionId }.orEmpty()
+            val isTeacher = currentUser?.role?.equals("teacher", ignoreCase = true) == true
+            val isPublished = loadedLesson.status.equals("published", ignoreCase = true)
+            val isReleased = loadedLesson.releasedSectionIds.isEmpty() ||
+                loadedLesson.releasedSectionIds.any { it.equals(section, ignoreCase = true) }
+            if (!isTeacher && (!isPublished || !isReleased)) {
+                runOnUiThread {
+                    Toast.makeText(
+                        this,
+                        "This lesson is not currently released for your section.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    finish()
+                }
+                return@getLesson
+            }
             lesson = loadedLesson
             lessonRepository.getActivitiesForLesson(lesson.id) { loadedActivities ->
                 progressRepository.getStudentLessonProgress(studentId, lesson.id) { savedProgress ->
@@ -97,10 +114,15 @@ class LessonPlayerActivity : AppCompatActivity() {
         binding.tvLessonObjective.text = lesson.objective
         binding.tvLessonSummary.text = lesson.summary
         binding.tvModeLabel.text = if (assessmentOnly) "Test Knowledge" else "Lesson Player"
-        binding.tvLessonMeta.text = "${lesson.estimatedMinutes} min • ${activities.size} quick checks"
+        binding.tvLessonMeta.text = if (assessmentOnly) {
+            "${lesson.estimatedMinutes} min - ${activities.size} assessment item(s)"
+        } else {
+            "${lesson.estimatedMinutes} min - ${activities.size} quick check(s)"
+        }
         binding.contentIntro.visibility = if (assessmentOnly) View.GONE else View.VISIBLE
         binding.resultGroup.visibility = View.GONE
         binding.questionGroup.visibility = View.VISIBLE
+        binding.btnFinish.text = if (assessmentOnly) "Back to Practice" else "Back to Learning Plan"
         binding.btnNext.text = if (activities.size <= 1) "Finish Lesson" else "Next"
 
         if (activities.isEmpty()) {
@@ -108,6 +130,7 @@ class LessonPlayerActivity : AppCompatActivity() {
             binding.resultGroup.visibility = View.VISIBLE
             binding.tvResultTitle.text = "No activities yet"
             binding.tvResultSummary.text = "This lesson is ready, but its quick checks have not been added yet."
+            binding.tvResultMeta.text = "Return to the LMS and check again after your teacher updates this lesson."
             binding.btnViewProgress.visibility = View.GONE
             return
         }
@@ -278,6 +301,18 @@ class LessonPlayerActivity : AppCompatActivity() {
             "Progress saved. You can review this lesson again anytime."
         }
         binding.btnViewProgress.visibility = View.VISIBLE
+        binding.btnFinish.text = if (assessmentOnly) "Back to Practice" else "Back to Learning Plan"
+    }
+
+    private fun navigateAfterFinish() {
+        val destination = if (assessmentOnly) {
+            Intent(this, TestKnowledgeActivity::class.java)
+        } else {
+            Intent(this, MyLearningPlanActivity::class.java)
+        }
+        destination.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        startActivity(destination)
+        finish()
     }
 
     private data class AnswerEvaluation(

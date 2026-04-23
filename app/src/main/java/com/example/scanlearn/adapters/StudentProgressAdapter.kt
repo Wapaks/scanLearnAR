@@ -27,11 +27,11 @@ class StudentProgressAdapter(
             tvStudentName.text = student.name
             tvStudentNumber.text = student.studentNumber
             tvStudentSection.text = student.section
-            tvScannedCount.text = student.scannedCount.toString()
-            tvSubmissionsCount.text = student.submissionsCount.toString()
+            tvLessonsCompleted.text = student.completedLessonsCount.toString()
+            tvTasksCompleted.text = student.completedTasksCount.toString()
             tvAverageScore.text = "${student.averageScorePercent}%"
-            tvManualCorrections.text = student.manualCorrectionsCount.toString()
-            tvLowConfidence.text = student.lowConfidenceCount.toString()
+            tvMasteryCount.text = student.masteredCompetenciesCount.toString()
+            tvStalledTasks.text = student.stalledTasksCount.toString()
             root.setOnClickListener { onClick(student) }
         }
     }

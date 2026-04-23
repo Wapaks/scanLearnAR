@@ -49,6 +49,19 @@
                     android:text="teacher@neu.edu.ph"
                     android:textColor="#AAFFFFFF"
                     android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvTeacherScope"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_badge_yellow"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="6dp"
+                    android:text="Handles Grade"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
@@ -95,7 +108,7 @@
                         android:layout_height="72dp"
                         android:layout_weight="1"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:text="Objects"
+                        android:text="Resources"
                         android:textSize="15sp"
                         app:cornerRadius="16dp"
                         app:strokeColor="@color/primary" />
@@ -121,6 +134,18 @@
                         app:strokeColor="@color/primary" />
 
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnReviewQueue"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="72dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:text="Review Queue"
+                        android:textSize="15sp"
+                        app:cornerRadius="16dp"
+                        app:strokeColor="@color/primary" />
+
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnStudents"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
@@ -128,6 +153,25 @@
                         android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:text="Students"
+                        android:textSize="15sp"
+                        app:cornerRadius="16dp"
+                        app:strokeColor="@color/primary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSections"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="72dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:text="Sections"
                         android:textSize="15sp"
                         app:cornerRadius="16dp"
                         app:strokeColor="@color/primary" />
@@ -148,10 +192,19 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
-                    android:text="Overview"
+                    android:text="LMS Overview"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvDashboardSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Keep lessons, tasks, and learner progress aligned for your grade."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
 
                 <ProgressBar
                     android:id="@+id/loadingIndicator"
@@ -270,6 +323,41 @@
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="1dp"
+                        app:strokeColor="@color/border"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:id="@+id/tvSectionReleaseSummary"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Section release snapshot"
+                                android:textColor="@color/text_primary"
+                                android:textSize="17sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvSectionCompletionSummary"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="Section completion summary"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
@@ -302,32 +390,6 @@
                     android:text="Hidden"
                     android:visibility="gone" />
 
-                <Button
-                    android:id="@+id/tabSantan"
-                    android:layout_width="1dp"
-                    android:layout_height="1dp"
-                    android:text="S"
-                    android:visibility="gone" />
-
-                <Button
-                    android:id="@+id/tabDaisy"
-                    android:layout_width="1dp"
-                    android:layout_height="1dp"
-                    android:text="D"
-                    android:visibility="gone" />
-
-                <Button
-                    android:id="@+id/tabOrchid"
-                    android:layout_width="1dp"
-                    android:layout_height="1dp"
-                    android:text="O"
-                    android:visibility="gone" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvStudents"
-                    android:layout_width="1dp"
-                    android:layout_height="1dp"
-                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
